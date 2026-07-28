@@ -1,23 +1,41 @@
 /* ============================================
-   HSK Admin · Storage Layer
-   Quản lý dữ liệu qua localStorage với fallback
-   về dữ liệu mặc định trong /js/data.js
+   HSK Admin · Storage Layer (API mode)
+   Tất cả thao tác dữ liệu gọi về backend Express.
+   Vẫn giữ `Store.data` làm cache để UI render ngay.
    ============================================ */
 
-const STORE_KEY = 'hsk_admin_data_v1';
+// Key map giữa tên collection internal và biến trong data.js (seed local)
+const KEY_TO_VAR = {
+  vocab: 'vocabData',
+  warmup: 'wuData',
+  dialogs: 'dialogData',
+  fill: 'fillData',
+  sort: 'sortData',
+  match: 'matchData',
+  mc: 'mcData',
+  convo: 'convoData',
+};
 
-/**
- * Khởi tạo dữ liệu: nếu localStorage chưa có thì nạp từ data mặc định
- */
-function loadStore() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {
-    console.warn('Lỗi đọc localStorage:', e);
+/** Fetch helper với xử lý lỗi */
+async function api(path, opts = {}) {
+  const url = API_BASE + path;
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try { const j = await res.json(); msg = j.error || msg; } catch (_) {}
+    throw new Error(msg);
   }
-  // Clone dữ liệu mặc định (từ data.js load qua <script>)
-  // Lưu ý: data.js dùng `const` nên tham chiếu trực tiếp biến global, không qua window.
+  // DELETE / POST có thể trả JSON, GET luôn JSON
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) return res.json();
+  return null;
+}
+
+/** Khởi tạo dữ liệu seed từ data.js local (fallback nếu API chết) */
+function seedFromLocal() {
   return {
     vocab: JSON.parse(JSON.stringify(typeof vocabData !== 'undefined' ? vocabData : [])),
     warmup: JSON.parse(JSON.stringify(typeof wuData !== 'undefined' ? wuData : [])),
@@ -30,71 +48,134 @@ function loadStore() {
   };
 }
 
-function saveStore(data) {
-  try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(data));
-    return true;
-  } catch (e) {
-    console.error('Lỗi ghi localStorage:', e);
-    return false;
-  }
-}
-
-// Instance singleton
 const Store = {
   data: null,
-  init() { this.data = loadStore(); return this.data; },
-  save() { return saveStore(this.data); },
+  online: false,
 
-  /* Generic CRUD cho mọi mảng */
+  /** Load toàn bộ dữ liệu từ API. Fallback về seed local nếu lỗi. */
+  async init() {
+    try {
+      const all = await api('/api/_export/all');
+      // Đảm bảo đủ 8 keys
+      this.data = {
+        vocab: all.vocab || [],
+        warmup: all.warmup || [],
+        dialogs: all.dialogs || [],
+        fill: all.fill || [],
+        sort: all.sort || [],
+        match: all.match || [],
+        mc: all.mc || [],
+        convo: all.convo || [],
+      };
+      this.online = true;
+      console.info('[Store] Đã load từ API:', API_BASE);
+    } catch (e) {
+      console.warn('[Store] API không khả dụng, dùng seed local:', e.message);
+      this.data = seedFromLocal();
+      this.online = false;
+    }
+    return this.data;
+  },
+
+  /** Đồng bộ 1 collection từ server (sau khi CRUD để refresh) */
+  async refresh(key) {
+    if (!this.online) return;
+    try {
+      this.data[key] = await api('/api/' + key);
+    } catch (e) {
+      console.warn('[Store] Lỗi refresh', key, e.message);
+    }
+  },
+
+  /* ─── Read ─── */
   list(key) { return this.data[key] || []; },
   get(key, id) { return (this.data[key] || []).find(x => String(x.n || x.id) === String(id)); },
 
+  /* ─── Create ─── */
   add(key, item) {
-    const arr = this.data[key];
-    // Sinh id tự tăng: dùng field 'n' nếu có, không thì 'id'
-    const idField = item.n !== undefined ? 'n' : 'id';
-    const max = arr.reduce((m, x) => Math.max(m, Number(x[idField]) || 0), 0);
-    item[idField] = max + 1;
+    if (this.online) {
+      // Async fire-and-forget, không block UI; refresh sau
+      api('/api/' + key, { method: 'POST', body: JSON.stringify(item) })
+        .then(saved => { this.data[key].push(saved); this.refresh(key); if (window.onStoreChange) window.onStoreChange(); })
+        .catch(e => window.onApiError && window.onApiError('Thêm thất bại: ' + e.message));
+      // Optimistic: thêm tạm với id giả để UI hiển thị ngay
+      this.data[key].push(item);
+      return item;
+    }
+    // Offline: sinh id local
+    const arr = this.data[key] || (this.data[key] = []);
+    if ('n' in item) { const max = arr.reduce((m, x) => Math.max(m, Number(x.n) || 0), 0); item.n = max + 1; }
     arr.push(item);
-    this.save();
     return item;
   },
 
+  /* ─── Update ─── */
   update(key, id, patch) {
-    const arr = this.data[key];
-    const idField = arr[0] && arr[0].n !== undefined ? 'n' : 'id';
-    const i = arr.findIndex(x => String(x[idField]) === String(id));
-    if (i === -1) return null;
-    arr[i] = Object.assign({}, arr[i], patch);
-    arr[i][idField] = id; // giữ nguyên id
-    this.save();
-    return arr[i];
+    const arr = this.data[key] || [];
+    const i = arr.findIndex(x => String(x.n || x.id) === String(id));
+    if (i !== -1) arr[i] = Object.assign({}, arr[i], patch, { n: id, id: id });
+    if (this.online) {
+      api('/api/' + key + '/' + id, { method: 'PUT', body: JSON.stringify(patch) })
+        .then(() => this.refresh(key))
+        .catch(e => window.onApiError && window.onApiError('Cập nhật thất bại: ' + e.message));
+    }
+    return i !== -1 ? arr[i] : null;
   },
 
+  /* ─── Delete ─── */
   remove(key, id) {
-    const arr = this.data[key];
-    const idField = arr[0] && arr[0].n !== undefined ? 'n' : 'id';
-    const i = arr.findIndex(x => String(x[idField]) === String(id));
-    if (i === -1) return false;
-    arr.splice(i, 1);
-    this.save();
+    const arr = this.data[key] || [];
+    const i = arr.findIndex(x => String(x.n || x.id) === String(id));
+    if (i !== -1) arr.splice(i, 1);
+    if (this.online) {
+      api('/api/' + key + '/' + id, { method: 'DELETE' })
+        .then(() => this.refresh(key))
+        .catch(e => window.onApiError && window.onApiError('Xóa thất bại: ' + e.message));
+    }
     return true;
   },
 
-  /* Đặt lại toàn bộ mảng (khi import) */
-  setAll(key, items) { this.data[key] = items; this.save(); },
+  /** Đặt lại cả mảng (khi import) */
+  setAll(key, items) { this.data[key] = items; },
 
-  /* Reset về mặc định */
-  reset() {
-    localStorage.removeItem(STORE_KEY);
-    this.init();
+  /** Reset về seed mặc định (server) */
+  async reset() {
+    if (this.online) {
+      try {
+        const r = await api('/api/_reset', { method: 'POST' });
+        // Refetch all
+        await this.init();
+        return;
+      } catch (e) {
+        window.onApiError && window.onApiError('Reset thất bại: ' + e.message);
+      }
+    }
+    this.data = seedFromLocal();
   },
 
-  /* Export data.js để copy sang web chính */
+  /** Import toàn bộ dữ liệu lên server */
+  async importAll(data) {
+    if (this.online) {
+      await api('/api/_import', { method: 'POST', body: JSON.stringify(data) });
+      await this.init();
+      return;
+    }
+    this.data = {
+      vocab: data.vocabData || data.vocab || [],
+      warmup: data.wuData || data.warmup || [],
+      dialogs: data.dialogData || data.dialogs || [],
+      fill: data.fillData || data.fill || [],
+      sort: data.sortData || data.sort || [],
+      match: data.matchData || data.match || [],
+      mc: data.mcData || data.mc || [],
+      convo: data.convoData || data.convo || [],
+    };
+  },
+
+  /* ─── Export data.js (dùng API khi online, fallback local) ─── */
   exportJs() {
-    const d = this.data;
     const fmt = (arr) => JSON.stringify(arr, null, 2);
+    const d = this.data;
     return `/* Tự sinh từ HSK Admin · ${new Date().toLocaleString('vi-VN')} */
 const vocabData = ${fmt(d.vocab)};
 
@@ -112,5 +193,22 @@ const mcData = ${fmt(d.mc)};
 
 const convoData = ${fmt(d.convo)};
 `;
-  }
+  },
+
+  /** Lấy URL download data.js trực tiếp từ server */
+  getExportUrl() {
+    return API_BASE + '/api/_export/data.js';
+  },
+
+  /** Kiểm tra trạng thái kết nối API */
+  async checkHealth() {
+    try {
+      const r = await fetch(API_BASE + '/api', { method: 'GET' });
+      this.online = r.ok;
+      return r.ok;
+    } catch (_) {
+      this.online = false;
+      return false;
+    }
+  },
 };

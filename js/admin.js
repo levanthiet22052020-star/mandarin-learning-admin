@@ -565,8 +565,25 @@ function escapeHtml(s) { return String(s || '').replace(/[&<>]/g, c => ({ '&': '
 function escapeAttr(s) { return String(s || '').replace(/"/g, '&quot;'); }
 
 /* ─── Import / Export / Reset ─── */
-function exportData() {
-  const js = Store.exportJs();
+async function exportData() {
+  // Nếu online: tải trực tiếp data.js từ server (luôn mới nhất)
+  if (Store.online) {
+    try {
+      const r = await fetch(Store.getExportUrl());
+      const js = await r.text();
+      _downloadJs(js);
+      toast('Đã xuất file', 'Tải data.js từ server — copy đè vào js/data.js của web học nếu không dùng API.', 'success');
+      return;
+    } catch (e) {
+      console.warn('Tải từ API thất bại, fallback local:', e);
+    }
+  }
+  // Fallback: export từ cache local
+  _downloadJs(Store.exportJs());
+  toast('Đã xuất file (local)', 'Tải data.js từ cache local.', 'success');
+}
+
+function _downloadJs(js) {
   const blob = new Blob([js], { type: 'text/javascript;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -576,28 +593,29 @@ function exportData() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  toast('Đã xuất file', 'Tải data.js về — copy đè vào js/data.js của web chính.', 'success');
 }
 
 function triggerImport(input) {
   if (!input.files || !input.files[0]) return;
   const file = input.files[0];
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     try {
       const code = e.target.result;
       const fn = new Function(code + '; return {vocabData,wuData,dialogData,fillData,sortData,matchData,mcData,convoData};');
       const result = fn();
-      Store.data.vocab = result.vocabData || Store.data.vocab;
-      Store.data.warmup = result.wuData || Store.data.warmup;
-      Store.data.dialogs = result.dialogData || Store.data.dialogs;
-      Store.data.fill = result.fillData || Store.data.fill;
-      Store.data.sort = result.sortData || Store.data.sort;
-      Store.data.match = result.matchData || Store.data.match;
-      Store.data.mc = result.mcData || Store.data.mc;
-      Store.data.convo = result.convoData || Store.data.convo;
-      Store.save();
-      toast('Đã nhập dữ liệu', 'Dữ liệu từ file đã được tải vào.', 'success');
+      // Push toàn bộ lên server (nếu online)
+      await Store.importAll({
+        vocab: result.vocabData || [],
+        warmup: result.wuData || [],
+        dialogs: result.dialogData || [],
+        fill: result.fillData || [],
+        sort: result.sortData || [],
+        match: result.matchData || [],
+        mc: result.mcData || [],
+        convo: result.convoData || [],
+      });
+      toast('Đã nhập dữ liệu', 'Dữ liệu đã được tải lên server.', 'success');
       refreshAll();
     } catch (err) {
       toast('Lỗi nhập file', 'File không đúng định dạng data.js. ' + err.message, 'error');
@@ -610,11 +628,11 @@ function triggerImport(input) {
 async function resetAll() {
   const ok = await confirmDialog({
     title: 'Đặt lại toàn bộ dữ liệu?',
-    msg: 'Mọi thay đổi sẽ bị mất và khôi phục về dữ liệu gốc ban đầu. Không thể hoàn tác.',
+    msg: 'Mọi thay đổi sẽ bị mất và khôi phục về dữ liệu gốc ban đầu. KHÔNG THỂ HOÀN TÁC.',
     target: 'TOÀN BỘ DỮ LIỆU'
   });
   if (!ok) return;
-  Store.reset();
+  await Store.reset();
   toast('Đã đặt lại', 'Dữ liệu đã về trạng thái ban đầu.', 'success');
   refreshAll();
 }
@@ -643,11 +661,29 @@ function updateNavCounts() {
   });
 }
 
+/* ─── API status indicator (online/offline) ─── */
+window.onApiError = function (msg) {
+  toast('Lỗi đồng bộ', msg || 'Không thể kết nối server.', 'error');
+};
+window.onStoreChange = function () {
+  // Refresh view hiện tại khi server update xong
+  refreshAll();
+};
+
 /* ─── Khởi tạo ─── */
-document.addEventListener('DOMContentLoaded', () => {
-  Store.init();
+async function boot() {
+  // Hiển thị trạng thái loading
+  const main = document.getElementById('page-title');
+  const oldTitle = main.textContent;
+  main.textContent = 'Đang tải dữ liệu từ server...';
+
+  await Store.init(); // async: load từ API
+  updateApiBadge();
   updateNavCounts();
   renderDashboard();
+
+  main.textContent = oldTitle || 'Tổng quan';
+
   // Bind form submit
   document.getElementById('vocab-form').addEventListener('submit', submitVocabForm);
   document.getElementById('dialog-form').addEventListener('submit', submitDialogForm);
@@ -669,4 +705,28 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('vocab-filter-lesson').addEventListener('change', e => { vocabFilter.lesson = e.target.value; renderVocab(); });
     document.getElementById('vocab-filter-pos').addEventListener('change', e => { vocabFilter.pos = e.target.value; renderVocab(); });
   }
-});
+}
+
+/** Cập nhật badge Online/Offline ở header */
+function updateApiBadge() {
+  let badge = document.getElementById('api-badge');
+  if (!badge) {
+    // Tạo nếu chưa có
+    badge = document.createElement('div');
+    badge.id = 'api-badge';
+    badge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:.8rem;padding:4px 10px;border-radius:999px;font-weight:600;margin-left:12px;';
+    const header = document.querySelector('.topbar, .header, header');
+    if (header) header.appendChild(badge);
+  }
+  if (Store.online) {
+    badge.style.background = '#dcfce7';
+    badge.style.color = '#16a34a';
+    badge.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#16a34a;display:inline-block;"></span> API Online';
+  } else {
+    badge.style.background = '#fee2e2';
+    badge.style.color = '#dc2626';
+    badge.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;"></span> API Offline (local seed)';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', boot);
