@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HSK Admin · Quản lý nội dung bài học</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <div class="sidebar-logo">
+        <div class="logo-box">汉</div>
+        <div>HSK Admin<small>Quản lý bài 12</small></div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Quản lý chung</div>
+      <button class="nav-item active" data-title="Tổng quan" data-count="" onclick="showView('dashboard',this)">
+        <span id="ic-dash"></span> Tổng quan
+      </button>
+      <div class="nav-label">Nội dung bài học</div>
+      <button class="nav-item" data-title="Từ vựng" data-count="vocab" onclick="showView('vocab',this)">
+        <span id="ic-vocab"></span> Từ vựng <span class="count">0</span>
+      </button>
+      <button class="nav-item" data-title="Hội thoại" data-count="dialogs" onclick="showView('dialogs',this)">
+        <span id="ic-dlg"></span> Hội thoại <span class="count">0</span>
+      </button>
+      <button class="nav-item" data-title="Bài tập" data-count="quiz" onclick="showView('quiz',this)">
+        <span id="ic-quiz"></span> Bài tập <span class="count">0</span>
+      </button>
+      <div class="nav-label">Dữ liệu</div>
+      <button class="nav-item" data-title="Xuất & Nhập" onclick="showView('data',this)">
+        <span id="ic-data"></span> Xuất / Nhập
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <a href="http://localhost:8000/index.html" target="_blank">↗ Mở web học (local)</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <button class="mobile-menu-btn" aria-label="Menu"><span id="ic-menu"></span></button>
+      <h1 id="page-title">Tổng quan</h1>
+      <div class="spacer"></div>
+      <button class="topbar-btn" onclick="exportData()" title="Tải file data.js để cập nhật web chính"><span id="ic-dl"></span> Xuất data.js</button>
+    </header>
+
+    <main class="content">
+
+      <!-- ══ VIEW: DASHBOARD ══ -->
+      <section id="view-dashboard" class="view active">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Xin chào! 👋</div>
+            <div class="page-sub">Đây là bảng điều khiển quản lý nội dung bài học tiếng Trung.</div>
+          </div>
+        </div>
+
+        <div class="stats-grid" id="stats-grid"></div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">⚡ Thao tác nhanh</div>
+          </div>
+          <div id="quick-actions" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">📖 Hướng dẫn sử dụng nhanh</div>
+          </div>
+          <div style="color:var(--foreground-2);font-size:.92rem;line-height:1.9;">
+            <div style="margin-bottom:10px;"><strong>1. Thêm/Sửa/Xóa nội dung:</strong> Chọn mục ở thanh bên trái (Từ vựng, Hội thoại, Bài tập). Bấm nút <span class="tag tag-blue">+ Thêm</span> màu xanh để tạo mới, hoặc biểu tượng <span class="tag tag-gray">✏️</span> để sửa.</div>
+            <div style="margin-bottom:10px;"><strong>2. Dữ liệu lưu ở đâu?</strong> Tự động lưu trong trình duyệt (localStorage). Lần sau mở lại vẫn còn nguyên.</div>
+            <div style="margin-bottom:10px;"><strong>3. Cập nhật lên web học:</strong> Bấm nút <span class="tag tag-blue">Xuất data.js</span> ở trên cùng 👆 — tải file về, chép đè vào <code style="background:var(--bg);padding:2px 6px;border-radius:4px;">js/data.js</code> của web chính.</div>
+            <div><strong>4. Nhập từ file cũ:</strong> Vào mục "Xuất / Nhập" để tải lên file data.js đã có sẵn.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ VIEW: VOCAB ══ -->
+      <section id="view-vocab" class="view">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Quản lý từ vựng</div>
+            <div class="page-sub" id="vocab-count">0 từ</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openVocabForm()"><span id="ic-plus-v"></span> Thêm từ mới</button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-box">
+            <span id="ic-search"></span>
+            <input id="vocab-filter" type="text" placeholder="Tìm theo chữ Hán, phiên âm, nghĩa..." aria-label="Tìm từ vựng">
+          </div>
+          <select id="vocab-filter-lesson" class="filter-select" aria-label="Lọc theo bài">
+            <option value="">Tất cả bài</option>
+            <option value="1">Bài 1 · Thời tiết</option>
+            <option value="2">Bài 2 · Tuyết rơi</option>
+            <option value="3">Bài 3 · Khám bệnh</option>
+          </select>
+          <select id="vocab-filter-pos" class="filter-select" aria-label="Lọc theo từ loại">
+            <option value="">Mọi từ loại</option>
+            <option>Danh từ</option><option>Động từ</option><option>Tính từ</option>
+            <option>Phó từ</option><option>Đại từ</option><option>Trợ từ</option>
+            <option>Số lượng từ</option><option>Lượng từ</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>STT</th><th></th><th>Từ</th><th>Nghĩa</th><th>Từ loại</th><th>Bài</th><th style="text-align:right;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="vocab-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ VIEW: DIALOGS ══ -->
+      <section id="view-dialogs" class="view">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Quản lý hội thoại</div>
+            <div class="page-sub">Các đoạn hội thoại mẫu trong bài học.</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openDialogForm()"><span id="ic-plus-d"></span> Thêm hội thoại</button>
+          </div>
+        </div>
+        <div id="dialogs-wrap"></div>
+      </section>
+
+      <!-- ══ VIEW: QUIZ ══ -->
+      <section id="view-quiz" class="view">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Quản lý bài tập</div>
+            <div class="page-sub" id="quiz-count">0 câu</div>
+          </div>
+        </div>
+
+        <!-- Sub-tabs -->
+        <div class="toolbar" style="margin-bottom:18px;">
+          <button class="btn quiz-subtab active" onclick="setQuizTab('mc',this)">🎯 Trắc nghiệm</button>
+          <button class="btn quiz-subtab" onclick="setQuizTab('fill',this)">✏️ Điền từ</button>
+          <button class="btn quiz-subtab" onclick="setQuizTab('sort',this)">🧩 Sắp xếp</button>
+          <button class="btn quiz-subtab" onclick="setQuizTab('match',this)">🔗 Nối câu</button>
+          <div class="toolbar-info">Chọn loại bài tập</div>
+        </div>
+
+        <div class="page-actions" style="margin-bottom:16px;" id="quiz-add-btn">
+          <button class="btn btn-primary" onclick="openMcForm()"><span id="ic-plus-q"></span> Thêm câu</button>
+        </div>
+
+        <div id="quiz-content"></div>
+      </section>
+
+      <!-- ══ VIEW: DATA (Export/Import) ══ -->
+      <section id="view-data" class="view">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Xuất & Nhập dữ liệu</div>
+            <div class="page-sub">Đồng bộ nội dung với web học chính.</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title" style="margin-bottom:6px;">📤 Xuất dữ liệu ra file</div>
+          <p style="color:var(--muted);font-size:.9rem;margin-bottom:14px;">Tải file <code style="background:var(--bg);padding:2px 6px;border-radius:4px;">data.js</code> về máy. Sau đó chép đè vào thư mục <code style="background:var(--bg);padding:2px 6px;border-radius:4px;">js/data.js</code> của web học để cập nhật.</p>
+          <button class="btn btn-primary" onclick="exportData()"><span id="ic-dl2"></span> Tải data.js</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title" style="margin-bottom:6px;">📥 Nhập dữ liệu từ file</div>
+          <p style="color:var(--muted);font-size:.9rem;margin-bottom:14px;">Chọn file <code style="background:var(--bg);padding:2px 6px;border-radius:4px;">data.js</code> đã có để nhập vào. <strong style="color:var(--danger);">Lưu ý:</strong> thao tác này sẽ ghi đè dữ liệu hiện tại.</p>
+          <label class="btn" style="cursor:pointer;">
+            <span id="ic-ul"></span> Chọn file data.js
+            <input type="file" accept=".js,text/javascript" onchange="triggerImport(this)" style="display:none;">
+          </label>
+        </div>
+
+        <div class="panel" style="border-color:var(--danger-l);">
+          <div class="panel-title" style="margin-bottom:6px;color:var(--danger);">⚠️ Vùng nguy hiểm</div>
+          <p style="color:var(--muted);font-size:.9rem;margin-bottom:14px;">Đặt lại toàn bộ về dữ liệu gốc ban đầu. <strong>Mọi thay đổi sẽ bị mất vĩnh viễn.</strong></p>
+          <button class="btn btn-danger" onclick="resetAll()"><span id="ic-rs"></span> Đặt lại toàn bộ dữ liệu</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ════ MODALS ════ -->
+
+<!-- MODAL: VOCAB FORM -->
+<div class="modal-overlay" id="vocab-modal">
+  <div class="modal" role="dialog" aria-labelledby="vocab-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="vocab-modal-title">Thêm từ vựng</div>
+      <button class="modal-close" onclick="closeModal('vocab-modal')" aria-label="Đóng"><span id="ic-x1"></span></button>
+    </div>
+    <form id="vocab-form" class="modal-body">
+      <input type="hidden" name="n">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Chữ Hán <span class="req">*</span></label>
+          <input class="input" name="zh" placeholder="例: 雪" required>
+        </div>
+        <div class="form-field">
+          <label>Phiên âm <span class="req">*</span></label>
+          <input class="input" name="py" placeholder="xuě" required>
+        </div>
+        <div class="form-field full">
+          <label>Nghĩa tiếng Việt <span class="req">*</span></label>
+          <input class="input" name="vn" placeholder="tuyết" required>
+        </div>
+        <div class="form-field">
+          <label>Từ loại</label>
+          <select class="select" name="pos">
+            <option>Danh từ</option><option>Động từ</option><option>Tính từ</option>
+            <option>Phó từ</option><option>Đại từ</option><option>Trợ từ</option>
+            <option>Số lượng từ</option><option>Lượng từ</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Bài học</label>
+          <select class="select" name="lesson">
+            <option value="1">Bài 1 · Thời tiết</option>
+            <option value="2">Bài 2 · Tuyết rơi</option>
+            <option value="3">Bài 3 · Khám bệnh</option>
+          </select>
+        </div>
+        <div class="form-field full">
+          <label>Emoji <span class="hint">(tùy chọn)</span></label>
+          <input class="input" name="em" placeholder="❄️" maxlength="4">
+        </div>
+        <div class="form-field full">
+          <label>Ví dụ — Tiếng Trung</label>
+          <input class="input" name="ex_zh" placeholder="昨天下雪了。">
+        </div>
+        <div class="form-field full">
+          <label>Ví dụ — Phiên âm</label>
+          <input class="input" name="ex_py" placeholder="Zuótiān xià xuě le.">
+        </div>
+        <div class="form-field full">
+          <label>Ví dụ — Tiếng Việt</label>
+          <input class="input" name="ex_vn" placeholder="Hôm qua tuyết rơi rồi.">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" onclick="closeModal('vocab-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: DIALOG FORM -->
+<div class="modal-overlay" id="dialog-modal">
+  <div class="modal lg" role="dialog" aria-labelledby="dialog-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="dialog-modal-title">Thêm hội thoại</div>
+      <button class="modal-close" onclick="closeModal('dialog-modal')" aria-label="Đóng"><span id="ic-x2"></span></button>
+    </div>
+    <form id="dialog-form" class="modal-body">
+      <input type="hidden" name="id">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>Bối cảnh / Tiêu đề <span class="req">*</span></label>
+          <input class="input" name="scene" placeholder="Ví dụ: 在电话里 · Qua điện thoại" required>
+        </div>
+        <div class="form-field">
+          <label>Nhân vật 1 <span class="req">*</span></label>
+          <input class="input" name="char0" placeholder="王一雪" required>
+        </div>
+        <div class="form-field">
+          <label>Nhân vật 2 <span class="req">*</span></label>
+          <input class="input" name="char1" placeholder="王一飞" required>
+        </div>
+        <div class="form-field full">
+          <label>Nhân vật 3 <span class="hint">(để trống nếu chỉ có 2 người)</span></label>
+          <input class="input" name="char2" placeholder="胡医生">
+        </div>
+      </div>
+      <div style="margin:18px 0 8px;font-weight:600;color:var(--foreground-2);font-size:.88rem;">💬 Các câu thoại</div>
+      <div id="dialog-lines"></div>
+      <button type="button" class="sublist-add" onclick="addDialogLine()"><span id="ic-plus-l"></span> Thêm câu thoại</button>
+      <div class="form-actions">
+        <button type="button" class="btn" onclick="closeModal('dialog-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Lưu hội thoại</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: MC FORM -->
+<div class="modal-overlay" id="mc-modal">
+  <div class="modal" role="dialog" aria-labelledby="mc-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="mc-modal-title">Thêm câu trắc nghiệm</div>
+      <button class="modal-close" onclick="closeModal('mc-modal')" aria-label="Đóng"><span id="ic-x3"></span></button>
+    </div>
+    <form id="mc-form" class="modal-body">
+      <input type="hidden" name="n">
+      <div class="form-field full" style="margin-bottom:16px;">
+        <label>Câu hỏi <span class="req">*</span></label>
+        <textarea class="textarea" name="q" placeholder="昨天___雪了。（Hôm qua tuyết rơi rồi）" required></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-field"><label>Lựa chọn A</label><input class="input" name="opt0" placeholder="上"></div>
+        <div class="form-field"><label>Lựa chọn B</label><input class="input" name="opt1" placeholder="下"></div>
+        <div class="form-field"><label>Lựa chọn C</label><input class="input" name="opt2" placeholder="来"></div>
+        <div class="form-field"><label>Lựa chọn D</label><input class="input" name="opt3" placeholder="去"></div>
+      </div>
+      <div class="form-field full" style="margin-top:16px;">
+        <label>Đáp án đúng</label>
+        <select class="select" name="ans">
+          <option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" onclick="closeModal('mc-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: FILL FORM -->
+<div class="modal-overlay" id="fill-modal">
+  <div class="modal" role="dialog" aria-labelledby="fill-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="fill-modal-title">Thêm câu điền từ</div>
+      <button class="modal-close" onclick="closeModal('fill-modal')" aria-label="Đóng"><span id="ic-x4"></span></button>
+    </div>
+    <form id="fill-form" class="modal-body">
+      <input type="hidden" name="n">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>Phần trước chỗ trống <span class="req">*</span></label>
+          <input class="input" name="pre" placeholder="外边正在下" required>
+        </div>
+        <div class="form-field">
+          <label>Từ cần điền <span class="req">*</span></label>
+          <input class="input" name="blank" placeholder="雪" required>
+        </div>
+        <div class="form-field">
+          <label>Đáp án đúng <span class="req">*</span></label>
+          <input class="input" name="ans" placeholder="雪" required>
+        </div>
+        <div class="form-field full">
+          <label>Phần sau chỗ trống</label>
+          <input class="input" name="post" placeholder="，太冷了。">
+        </div>
+        <div class="form-field full">
+          <label>Gợi ý</label>
+          <input class="input" name="hint" placeholder="(loại kết tủa từ bầu trời)">
+        </div>
+        <div class="form-field full">
+          <label>Giải thích</label>
+          <input class="input" name="exp" placeholder="雪 = tuyết; 下雪 = tuyết rơi">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" onclick="closeModal('fill-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: SORT FORM -->
+<div class="modal-overlay" id="sort-modal">
+  <div class="modal" role="dialog" aria-labelledby="sort-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="sort-modal-title">Thêm câu sắp xếp</div>
+      <button class="modal-close" onclick="closeModal('sort-modal')" aria-label="Đóng"><span id="ic-x5"></span></button>
+    </div>
+    <form id="sort-form" class="modal-body">
+      <input type="hidden" name="n">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>Câu đúng <span class="req">*</span></label>
+          <input class="input" name="ans" placeholder="昨天下雪了" required>
+        </div>
+        <div class="form-field full">
+          <label>Danh sách từ <span class="req">*</span> <span class="hint">(phân tách bằng dấu |)</span></label>
+          <input class="input" name="words" placeholder="昨天 | 下雪 | 了" required>
+        </div>
+        <div class="form-field full">
+          <label>Nghĩa tiếng Việt <span class="req">*</span></label>
+          <input class="input" name="vn" placeholder="Hôm qua tuyết rơi rồi." required>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" onclick="closeModal('sort-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: MATCH FORM -->
+<div class="modal-overlay" id="match-modal">
+  <div class="modal" role="dialog" aria-labelledby="match-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="match-modal-title">Thêm cặp nối</div>
+      <button class="modal-close" onclick="closeModal('match-modal')" aria-label="Đóng"><span id="ic-x6"></span></button>
+    </div>
+    <form id="match-form" class="modal-body">
+      <input type="hidden" name="n">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>Vế trái <span class="req">*</span></label>
+          <input class="input" name="left" placeholder="昨天下雪了，" required>
+        </div>
+        <div class="form-field full">
+          <label>Vế phải <span class="req">*</span></label>
+          <input class="input" name="right" placeholder="太冷了。" required>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" onclick="closeModal('match-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="modal-overlay" id="confirm-overlay">
+  <div class="modal" style="max-width:420px;" role="alertdialog">
+    <div class="modal-body">
+      <div class="confirm-body">
+        <div class="confirm-ic"><span id="ic-alert-c"></span></div>
+        <h3 class="confirm-title">Xác nhận</h3>
+        <p class="confirm-msg">Bạn có chắc?</p>
+        <div class="confirm-target" style="display:none;"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost">Hủy</button>
+      <button class="btn btn-danger">Xóa</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-wrap" id="toast-wrap" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ════ SCRIPTS ════ -->
+<script src="js/data.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/admin.js"></script>
+<script>
+  // Inject icons vào các placeholder span (giữ HTML gọn)
+  document.getElementById('ic-dash').innerHTML = I.dashboard;
+  document.getElementById('ic-vocab').innerHTML = I.book;
+  document.getElementById('ic-dlg').innerHTML = I.chat;
+  document.getElementById('ic-quiz').innerHTML = I.quiz;
+  document.getElementById('ic-data').innerHTML = I.download;
+  document.getElementById('ic-menu').innerHTML = I.menu;
+  document.getElementById('ic-dl').innerHTML = I.download;
+  document.getElementById('ic-dl2').innerHTML = I.download;
+  document.getElementById('ic-ul').innerHTML = I.upload;
+  document.getElementById('ic-rs').innerHTML = I.refresh;
+  document.getElementById('ic-plus-v').innerHTML = I.plus;
+  document.getElementById('ic-plus-d').innerHTML = I.plus;
+  document.getElementById('ic-plus-q').innerHTML = I.plus;
+  document.getElementById('ic-plus-l').innerHTML = I.plus;
+  document.getElementById('ic-search').innerHTML = I.search;
+  document.getElementById('ic-alert-c').innerHTML = I.alert;
+  document.getElementById('ic-x1').innerHTML = I.x;
+  document.getElementById('ic-x2').innerHTML = I.x;
+  document.getElementById('ic-x3').innerHTML = I.x;
+  document.getElementById('ic-x4').innerHTML = I.x;
+  document.getElementById('ic-x5').innerHTML = I.x;
+  document.getElementById('ic-x6').innerHTML = I.x;
+</script>
+</body>
+</html>

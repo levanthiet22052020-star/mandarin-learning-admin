@@ -1,0 +1,22 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (nếu sau này thêm build tool)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Playwright / test artifacts
+.playwright-mcp/
+
+# Tạm
+*.log
+.tmp/
