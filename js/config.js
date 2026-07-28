@@ -8,7 +8,7 @@
    Sửa dòng DEFAULT_API_BASE thành URL Render gán cho backend.
    ============================================ */
 
-const DEFAULT_API_BASE = 'http://localhost:4000';
+const DEFAULT_API_BASE = 'https://mandarin-learning-api.onrender.com';
 
 const API_BASE = (function () {
   const u = new URL(location.href);
