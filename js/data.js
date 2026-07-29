@@ -179,3 +179,320 @@ const convoData = [
     ]
   },
 ];
+
+// Dữ liệu ngữ pháp (3 điểm)
+const grammarData = [
+  {
+    "num": 1,
+    "title": "Câu phi chủ-vị",
+    "titleZh": "非主谓句",
+    "sub": "Câu chỉ gồm từ hoặc cụm từ, không phân biệt chủ ngữ và vị ngữ. Thường dùng trong lời nói hàng ngày.",
+    "rules": [
+      "Các câu phi chủ-vị ngắn gọn, súc tích, thường dùng để miêu tả hiện tượng, cảm thán hoặc lời chào xã giao."
+    ],
+    "formula": [],
+    "table": {
+      "columns": [
+        "Câu tiếng Trung",
+        "Phiên âm",
+        "Nghĩa tiếng Việt",
+        "Loại"
+      ],
+      "rows": [
+        [
+          {
+            "zh": "下雨了。"
+          },
+          {
+            "py": "Xià yǔ le."
+          },
+          {
+            "vn": "Trời mưa rồi."
+          },
+          {
+            "type": "Hiện tượng"
+          }
+        ],
+        [
+          {
+            "zh": "下雪了。"
+          },
+          {
+            "py": "Xià xuě le."
+          },
+          {
+            "vn": "Trời tuyết rồi."
+          },
+          {
+            "type": "Hiện tượng"
+          }
+        ],
+        [
+          {
+            "zh": "上课了。"
+          },
+          {
+            "py": "Shàng kè le."
+          },
+          {
+            "vn": "Vào lớp rồi."
+          },
+          {
+            "type": "Hiện tượng"
+          }
+        ],
+        [
+          {
+            "zh": "太棒了！"
+          },
+          {
+            "py": "Tài bàng le!"
+          },
+          {
+            "vn": "Tuyệt vời quá!"
+          },
+          {
+            "type": "Cảm thán"
+          }
+        ],
+        [
+          {
+            "zh": "小心！"
+          },
+          {
+            "py": "Xiǎoxīn!"
+          },
+          {
+            "vn": "Cẩn thận!"
+          },
+          {
+            "type": "Cảm thán"
+          }
+        ],
+        [
+          {
+            "zh": "对不起！"
+          },
+          {
+            "py": "Duìbuqǐ!"
+          },
+          {
+            "vn": "Xin lỗi!"
+          },
+          {
+            "type": "Xã giao"
+          }
+        ],
+        [
+          {
+            "zh": "请进！"
+          },
+          {
+            "py": "Qǐng jìn!"
+          },
+          {
+            "vn": "Mời vào!"
+          },
+          {
+            "type": "Xã giao"
+          }
+        ]
+      ]
+    },
+    "note": ""
+  },
+  {
+    "num": 2,
+    "title": "Trợ từ ngữ khí",
+    "titleZh": "「了(1)」",
+    "sub": "「了」đứng cuối câu hoặc tại chỗ ngừng trong câu, diễn đạt sự thay đổi hoặc tình huống mới xuất hiện.",
+    "rules": [
+      {
+        "label": "Khẳng định",
+        "text": "Chủ ngữ + VP + 了"
+      },
+      {
+        "label": "Phủ định",
+        "text": "没 + VP (không dùng 了 ở cuối)"
+      },
+      {
+        "label": "Nghi vấn",
+        "text": "Chủ ngữ + VP + 了 + 吗？"
+      }
+    ],
+    "formula": [],
+    "table": {
+      "columns": [
+        "Khẳng định",
+        "Phủ định (没)",
+        "Nghi vấn (吗)"
+      ],
+      "rows": [
+        [
+          {
+            "zh": "下雨了。",
+            "vn": "Trời mưa rồi."
+          },
+          {
+            "zh": "没下雨。",
+            "vn": "Trời không mưa."
+          },
+          {
+            "zh": "下雨了吗？",
+            "vn": "Trời mưa rồi chưa?"
+          }
+        ],
+        [
+          {
+            "zh": "他去学校了。",
+            "vn": "Anh ấy đi học rồi."
+          },
+          {
+            "zh": "没去上学。",
+            "vn": "Chưa đi học."
+          },
+          {
+            "zh": "弟弟起床了吗？",
+            "vn": "Em đã dậy chưa?"
+          }
+        ],
+        [
+          {
+            "zh": "昨天下雪了。",
+            "vn": "Hôm qua tuyết rơi rồi."
+          },
+          {
+            "zh": "没来公司。",
+            "vn": "Không đến công ty."
+          },
+          {
+            "zh": "你吃饭了吗？",
+            "vn": "Bạn ăn cơm chưa?"
+          }
+        ]
+      ]
+    },
+    "note": "⚠️ Lưu ý： Phủ định dùng「没」, KHÔNG dùng「不了」. Cuối câu phủ định KHÔNG có「了」."
+  },
+  {
+    "num": 3,
+    "title": "Cấu trúc",
+    "titleZh": "「太……了」",
+    "sub": "Diễn đạt mức độ rất cao, dùng để cảm thán (có thể là tích cực hoặc tiêu cực).",
+    "rules": [
+      "Cấu trúc： 太 + Tính từ / Cụm tính từ + 了"
+    ],
+    "formula": [
+      {
+        "cls": "fb-t",
+        "text": "太"
+      },
+      {
+        "cls": "fb-adj",
+        "text": "Tính từ"
+      },
+      {
+        "cls": "fb-le",
+        "text": "了"
+      },
+      {
+        "cls": "fb-arrow",
+        "text": "→"
+      },
+      {
+        "gloss": "... quá! / ... lắm!"
+      }
+    ],
+    "table": {
+      "columns": [
+        "Câu",
+        "Phiên âm",
+        "Nghĩa"
+      ],
+      "rows": [
+        [
+          {
+            "zh": "太冷了！"
+          },
+          {
+            "py": "Tài lěng le!"
+          },
+          {
+            "vn": "Lạnh quá!"
+          }
+        ],
+        [
+          {
+            "zh": "这个杯子太小了。"
+          },
+          {
+            "py": "Zhège bēizi tài xiǎo le."
+          },
+          {
+            "vn": "Cái cốc này nhỏ quá."
+          }
+        ],
+        [
+          {
+            "zh": "太棒了！"
+          },
+          {
+            "py": "Tài bàng le!"
+          },
+          {
+            "vn": "Tuyệt vời quá!"
+          }
+        ],
+        [
+          {
+            "zh": "今天太高兴了。"
+          },
+          {
+            "py": "Jīntiān tài gāoxìng le."
+          },
+          {
+            "vn": "Hôm nay vui quá."
+          }
+        ],
+        [
+          {
+            "zh": "太好吃了！"
+          },
+          {
+            "py": "Tài hàochi le!"
+          },
+          {
+            "vn": "Ngon quá!"
+          }
+        ]
+      ]
+    },
+    "note": "💡 Phân biệt 有点儿 và 一点儿：\n• 有点儿 + Tính từ → mức độ nhỏ, thường hàm ý không tốt: 今天有点儿冷 (Hôm nay hơi lạnh)\n• Tính từ + 一点儿 → so sánh / yêu cầu: 便宜一点儿吧 (Rẻ hơn một chút đi)"
+  }
+];
+
+// Tiêu đề bài học (header info)
+const metaData = {
+  "badge": "Bài 12",
+  "zh": "昨天下雪了",
+  "py": "Zuótiān xià xuě le",
+  "vn": "Hôm qua tuyết rơi rồi",
+  "chips": [
+    {
+      "icon": "snow",
+      "text": "Chủ đề: Thời tiết & Sức khỏe"
+    },
+    {
+      "icon": "book",
+      "text": "24 từ mới"
+    },
+    {
+      "icon": "chat",
+      "text": "3 hội thoại"
+    },
+    {
+      "icon": "compass",
+      "text": "3 điểm ngữ pháp"
+    }
+  ]
+};

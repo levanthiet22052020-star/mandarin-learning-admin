@@ -8,7 +8,27 @@
 <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
-<div class="app">
+
+<!-- ════ LOGIN OVERLAY ════ -->
+<div class="login-overlay" id="login-overlay">
+  <form class="login-card" id="login-form">
+    <div class="login-logo"><div class="logo-box">汉</div></div>
+    <h2 class="login-title">HSK Admin</h2>
+    <p class="login-sub">Đăng nhập để quản lý nội dung bài học</p>
+    <div class="login-field">
+      <label for="login-username">Tên đăng nhập</label>
+      <input class="input" id="login-username" name="username" type="text" autocomplete="username" placeholder="admin" required>
+    </div>
+    <div class="login-field">
+      <label for="login-password">Mật khẩu</label>
+      <input class="input" id="login-password" name="password" type="password" autocomplete="current-password" placeholder="••••••" required>
+    </div>
+    <div class="login-error" id="login-error" role="alert"></div>
+    <button type="submit" class="btn btn-primary login-btn">Đăng nhập</button>
+  </form>
+</div>
+
+<div class="app app-locked">
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
@@ -33,6 +53,22 @@
       <button class="nav-item" data-title="Bài tập" data-count="quiz" onclick="showView('quiz',this)">
         <span id="ic-quiz"></span> Bài tập <span class="count">0</span>
       </button>
+      <button class="nav-item" data-title="Khởi động" data-count="warmup" onclick="showView('warmup',this)">
+        <span id="ic-warmup"></span> Khởi động <span class="count">0</span>
+      </button>
+      <button class="nav-item" data-title="Luyện nói" data-count="convo" onclick="showView('convo',this)">
+        <span id="ic-convo"></span> Luyện nói <span class="count">0</span>
+      </button>
+      <button class="nav-item" data-title="Ngữ pháp" data-count="grammar" onclick="showView('grammar',this)">
+        <span id="ic-grammar"></span> Ngữ pháp <span class="count">0</span>
+      </button>
+      <button class="nav-item" data-title="Tiêu đề bài học" onclick="showView('meta',this)">
+        <span id="ic-meta"></span> Tiêu đề bài học
+      </button>
+      <div class="nav-label">Hệ thống</div>
+      <button class="nav-item" data-title="Tài khoản" data-count="" onclick="showView('users',this)">
+        <span id="ic-users"></span> Tài khoản <span class="count">·</span>
+      </button>
       <div class="nav-label">Dữ liệu</div>
       <button class="nav-item" data-title="Xuất & Nhập" onclick="showView('data',this)">
         <span id="ic-data"></span> Xuất / Nhập
@@ -49,7 +85,9 @@
       <button class="mobile-menu-btn" aria-label="Menu"><span id="ic-menu"></span></button>
       <h1 id="page-title">Tổng quan</h1>
       <div class="spacer"></div>
+      <div class="topbar-user" id="login-info" title="Tài khoản đang đăng nhập"></div>
       <button class="topbar-btn" onclick="exportData()" title="Tải file data.js để cập nhật web chính"><span id="ic-dl"></span> Xuất data.js</button>
+      <button class="topbar-btn" onclick="handleLogout()" title="Đăng xuất"><span id="ic-logout"></span> Đăng xuất</button>
     </header>
 
     <main class="content">
@@ -167,6 +205,82 @@
         </div>
 
         <div id="quiz-content"></div>
+      </section>
+
+      <!-- ══ VIEW: WARMUP (Khởi động) ══ -->
+      <section id="view-warmup" class="view">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Quản lý card khởi động</div>
+            <div class="page-sub" id="warmup-count">0 card</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openWarmupForm()"><span id="ic-plus-wu"></span> Thêm card</button>
+          </div>
+        </div>
+        <div class="panel" style="background:var(--primary-xl);border-color:var(--primary-l);padding:12px 16px;margin-bottom:16px;font-size:.88rem;color:var(--foreground-2);">
+          ℹ️ Mỗi card gồm: emoji, từ tiếng Trung (label), phiên âm, chữ cái (A–F) để ghép, và đáp án đúng (chữ cái).
+        </div>
+        <div id="warmup-wrap"></div>
+      </section>
+
+      <!-- ══ VIEW: CONVO (Luyện nói) ══ -->
+      <section id="view-convo" class="view">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Quản lý luyện hội thoại</div>
+            <div class="page-sub" id="convo-count">0 đoạn</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openConvoForm()"><span id="ic-plus-co"></span> Thêm đoạn luyện nói</button>
+          </div>
+        </div>
+        <div id="convo-wrap"></div>
+      </section>
+
+      <!-- ══ VIEW: GRAMMAR (Ngữ pháp) ══ -->
+      <section id="view-grammar" class="view">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Quản lý điểm ngữ pháp</div>
+            <div class="page-sub" id="grammar-count">0 điểm</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openGrammarForm()"><span id="ic-plus-gr"></span> Thêm điểm ngữ pháp</button>
+          </div>
+        </div>
+        <div class="panel" style="background:var(--primary-xl);border-color:var(--primary-l);padding:12px 16px;margin-bottom:16px;font-size:.88rem;color:var(--foreground-2);">
+          ℹ️ Mỗi điểm gồm: tiêu đề (+ chữ Hán), mô tả, các quy tắc, công thức (tùy chọn), bảng ví dụ (số cột tùy chỉnh), và ghi chú. Mỗi ô trong bảng có 4 trường: 中 / py / vi / loại (chỉ cần điền trường liên quan).
+        </div>
+        <div id="grammar-wrap"></div>
+      </section>
+
+      <!-- ══ VIEW: META (Tiêu đề bài học) ══ -->
+      <section id="view-meta" class="view">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Tiêu đề bài học</div>
+            <div class="page-sub">Thông tin hiển thị ở đầu trang web (badge, chữ Hán, phiên âm, các chip).</div>
+          </div>
+        </div>
+        <div id="meta-wrap"></div>
+      </section>
+
+      <!-- ══ VIEW: USERS (Tài khoản) ══ -->
+      <section id="view-users" class="view">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Quản lý tài khoản</div>
+            <div class="page-sub" id="users-count">0 tài khoản</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openUserForm()"><span id="ic-plus-u"></span> Thêm tài khoản</button>
+          </div>
+        </div>
+        <div class="panel" style="background:var(--primary-xl);border-color:var(--primary-l);padding:12px 16px;margin-bottom:16px;font-size:.88rem;color:var(--foreground-2);">
+          ℹ️ Chỉ tài khoản vai trò <strong>admin</strong> mới thấy trang này. <strong>editor</strong> có thể đăng nhập và sửa nội dung nhưng không quản lý tài khoản.
+        </div>
+        <div id="users-wrap"></div>
       </section>
 
       <!-- ══ VIEW: DATA (Export/Import) ══ -->
@@ -441,6 +555,206 @@
   </div>
 </div>
 
+<!-- MODAL: WARMUP FORM -->
+<div class="modal-overlay" id="warmup-modal">
+  <div class="modal" role="dialog" aria-labelledby="warmup-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="warmup-modal-title">Thêm card khởi động</div>
+      <button class="modal-close" onclick="closeModal('warmup-modal')" aria-label="Đóng"><span id="ic-x7"></span></button>
+    </div>
+    <form id="warmup-form" class="modal-body">
+      <input type="hidden" name="letter">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Emoji / Hình ảnh <span class="req">*</span></label>
+          <input class="input" name="img" placeholder="🌧️" maxlength="4" required>
+        </div>
+        <div class="form-field">
+          <label>Chữ cái (để ghép) <span class="req">*</span></label>
+          <input class="input" name="letter_input" placeholder="A" maxlength="2" oninput="this.form.letter.value=this.value.toUpperCase()" required>
+        </div>
+        <div class="form-field">
+          <label>Từ tiếng Trung <span class="req">*</span></label>
+          <input class="input" name="label" placeholder="下雨" required>
+        </div>
+        <div class="form-field">
+          <label>Phiên âm <span class="req">*</span></label>
+          <input class="input" name="py" placeholder="xià yǔ" required>
+        </div>
+        <div class="form-field full">
+          <label>Đáp án đúng (chữ cái) <span class="req">*</span></label>
+          <input class="input" name="ans" placeholder="A" maxlength="2" required>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" onclick="closeModal('warmup-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: CONVO FORM -->
+<div class="modal-overlay" id="convo-modal">
+  <div class="modal lg" role="dialog" aria-labelledby="convo-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="convo-modal-title">Thêm đoạn luyện nói</div>
+      <button class="modal-close" onclick="closeModal('convo-modal')" aria-label="Đóng"><span id="ic-x8"></span></button>
+    </div>
+    <form id="convo-form" class="modal-body">
+      <div class="form-field full" style="margin-bottom:16px;">
+        <label>Tiêu đề đoạn <span class="req">*</span></label>
+        <input class="input" name="title" placeholder="Hội thoại 1: Hỏi thăm thời tiết" required>
+      </div>
+      <div style="margin:8px 0;font-weight:600;color:var(--foreground-2);font-size:.88rem;">💬 Các cặp hỏi – đáp</div>
+      <div id="convo-pairs"></div>
+      <button type="button" class="sublist-add" onclick="addConvoPair()"><span id="ic-plus-cp"></span> Thêm cặp hỏi – đáp</button>
+      <div class="form-actions">
+        <button type="button" class="btn" onclick="closeModal('convo-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Lưu đoạn luyện nói</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: GRAMMAR FORM -->
+<div class="modal-overlay" id="grammar-modal">
+  <div class="modal lg" role="dialog" aria-labelledby="grammar-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="grammar-modal-title">Thêm điểm ngữ pháp</div>
+      <button class="modal-close" onclick="closeModal('grammar-modal')" aria-label="Đóng"><span id="ic-x9"></span></button>
+    </div>
+    <form id="grammar-form" class="modal-body">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Tiêu đề (VN) <span class="req">*</span></label>
+          <input class="input" name="title" placeholder="Cấu trúc" required>
+        </div>
+        <div class="form-field">
+          <label>Tiêu đề (chữ Hán)</label>
+          <input class="input" name="titleZh" placeholder="「太……了」">
+        </div>
+        <div class="form-field full">
+          <label>Mô tả ngắn</label>
+          <textarea class="textarea" name="sub" placeholder="Diễn đạt mức độ rất cao..."></textarea>
+        </div>
+      </div>
+
+      <div style="margin:18px 0 6px;font-weight:600;color:var(--foreground-2);font-size:.88rem;">📋 Quy tắc / Công thức chung</div>
+      <div id="grammar-rules"></div>
+      <button type="button" class="sublist-add" onclick="addGrammarRule()"><span id="ic-plus-gr-r"></span> Thêm quy tắc</button>
+
+      <div style="margin:18px 0 6px;font-weight:600;color:var(--foreground-2);font-size:.88rem;">🧩 Công thức trực quan (tùy chọn — chỉ dùng cho cấu trúc like 太...了)</div>
+      <div id="grammar-formula-info" class="cell-muted" style="font-size:.82rem;">Bỏ trống nếu điểm ngữ pháp không có công thức trực quan.</div>
+      <div id="grammar-formula"></div>
+      <button type="button" class="sublist-add" onclick="addGrammarFormula()"><span id="ic-plus-gr-f"></span> Thêm thành phần công thức</button>
+
+      <div style="margin:18px 0 6px;font-weight:600;color:var(--foreground-2);font-size:.88rem;">📊 Bảng ví dụ</div>
+      <div id="grammar-table"></div>
+
+      <div class="form-field full" style="margin-top:16px;">
+        <label>Ghi chú / Lưu ý</label>
+        <textarea class="textarea" name="note" placeholder="⚠️ Lưu ý：... (mỗi dòng xuống hàng riêng)"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" onclick="closeModal('grammar-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Lưu điểm ngữ pháp</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: META FORM -->
+<div class="modal-overlay" id="meta-modal">
+  <div class="modal" role="dialog" aria-labelledby="meta-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="meta-modal-title">Sửa tiêu đề bài học</div>
+      <button class="modal-close" onclick="closeModal('meta-modal')" aria-label="Đóng"><span id="ic-x10"></span></button>
+    </div>
+    <form id="meta-form" class="modal-body">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Badge (nhãn nhỏ)</label>
+          <input class="input" name="badge" placeholder="Bài 12">
+        </div>
+        <div class="form-field">
+          <label>Chữ Hán tiêu đề <span class="req">*</span></label>
+          <input class="input" name="zh" placeholder="昨天下雪了" required>
+        </div>
+        <div class="form-field">
+          <label>Phiên âm</label>
+          <input class="input" name="py" placeholder="Zuótiān xià xuě le">
+        </div>
+        <div class="form-field">
+          <label>Tiếng Việt</label>
+          <input class="input" name="vn" placeholder="Hôm qua tuyết rơi rồi">
+        </div>
+      </div>
+      <div style="margin:18px 0 6px;font-weight:600;color:var(--foreground-2);font-size:.88rem;">🏷️ Các chip thông tin</div>
+      <div id="meta-chips"></div>
+      <button type="button" class="sublist-add" onclick="addMetaChip()"><span id="ic-plus-mc"></span> Thêm chip</button>
+      <div class="form-actions">
+        <button type="button" class="btn" onclick="closeModal('meta-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Lưu tiêu đề</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: USER FORM (thêm tài khoản) -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal" role="dialog" aria-labelledby="user-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="user-modal-title">Thêm tài khoản</div>
+      <button class="modal-close" onclick="closeModal('user-modal')" aria-label="Đóng"><span id="ic-x11"></span></button>
+    </div>
+    <form id="user-form" class="modal-body">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Tên đăng nhập <span class="req">*</span></label>
+          <input class="input" name="username" placeholder="teacher1" required>
+        </div>
+        <div class="form-field">
+          <label>Vai trò</label>
+          <select class="select" name="role">
+            <option value="editor">editor — sửa được nội dung</option>
+            <option value="admin">admin — quản lý cả tài khoản</option>
+          </select>
+        </div>
+        <div class="form-field full">
+          <label>Mật khẩu <span class="req">*</span> <span class="hint">(tối thiểu 4 ký tự)</span></label>
+          <input class="input" name="password" type="password" placeholder="••••••" required>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" onclick="closeModal('user-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Tạo tài khoản</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: USER PASSWORD FORM (đổi mật khẩu) -->
+<div class="modal-overlay" id="userpw-modal">
+  <div class="modal" style="max-width:440px;" role="dialog" aria-labelledby="userpw-modal-title">
+    <div class="modal-head">
+      <div class="modal-title" id="userpw-modal-title">Đổi mật khẩu</div>
+      <button class="modal-close" onclick="closeModal('userpw-modal')" aria-label="Đóng"><span id="ic-x12"></span></button>
+    </div>
+    <form id="userpw-form" class="modal-body">
+      <input type="hidden" name="id">
+      <div class="form-field full">
+        <label>Mật khẩu mới <span class="req">*</span> <span class="hint">(tối thiểu 4 ký tự)</span></label>
+        <input class="input" name="password" type="password" placeholder="••••••" required>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" onclick="closeModal('userpw-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Đổi mật khẩu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- CONFIRM DIALOG -->
 <div class="modal-overlay" id="confirm-overlay">
   <div class="modal" style="max-width:420px;" role="alertdialog">
@@ -463,10 +777,10 @@
 <div class="toast-wrap" id="toast-wrap" aria-live="polite" aria-atomic="true"></div>
 
 <!-- ════ SCRIPTS ════ -->
-<script src="js/data.js"></script>
-<script src="js/config.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/admin.js"></script>
+<script src="js/data.js?v=3"></script>
+<script src="js/config.js?v=3"></script>
+<script src="js/storage.js?v=3"></script>
+<script src="js/admin.js?v=3"></script>
 <script>
   // Inject icons vào các placeholder span (giữ HTML gọn)
   document.getElementById('ic-dash').innerHTML = I.dashboard;
@@ -491,6 +805,30 @@
   document.getElementById('ic-x4').innerHTML = I.x;
   document.getElementById('ic-x5').innerHTML = I.x;
   document.getElementById('ic-x6').innerHTML = I.x;
+  // Nav icons mới
+  document.getElementById('ic-warmup').innerHTML = I.dashboard;
+  document.getElementById('ic-convo').innerHTML = I.chat;
+  document.getElementById('ic-grammar').innerHTML = I.grammar;
+  document.getElementById('ic-meta').innerHTML = I.book;
+  // Plus buttons mới
+  document.getElementById('ic-plus-wu').innerHTML = I.plus;
+  document.getElementById('ic-plus-co').innerHTML = I.plus;
+  document.getElementById('ic-plus-gr').innerHTML = I.plus;
+  document.getElementById('ic-plus-cp').innerHTML = I.plus;
+  document.getElementById('ic-plus-gr-r').innerHTML = I.plus;
+  document.getElementById('ic-plus-gr-f').innerHTML = I.plus;
+  document.getElementById('ic-plus-mc').innerHTML = I.plus;
+  // Close buttons mới
+  document.getElementById('ic-x7').innerHTML = I.x;
+  document.getElementById('ic-x8').innerHTML = I.x;
+  document.getElementById('ic-x9').innerHTML = I.x;
+  document.getElementById('ic-x10').innerHTML = I.x;
+  // Icons auth/users
+  document.getElementById('ic-users').innerHTML = I.users;
+  document.getElementById('ic-logout').innerHTML = I.logout;
+  document.getElementById('ic-plus-u').innerHTML = I.plus;
+  document.getElementById('ic-x11').innerHTML = I.x;
+  document.getElementById('ic-x12').innerHTML = I.x;
 </script>
 </body>
 </html>

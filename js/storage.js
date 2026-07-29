@@ -14,16 +14,29 @@ const KEY_TO_VAR = {
   match: 'matchData',
   mc: 'mcData',
   convo: 'convoData',
+  grammar: 'grammarData',
 };
+// meta là object đơn, lưu trong mảng 1 phần tử ở phía DB
+const META_KEY = 'meta';
+const META_VAR = 'metaData';
 
-/** Fetch helper với xử lý lỗi */
+/** Lấy token đăng nhập từ localStorage (nếu có) */
+function getAuthToken() { return localStorage.getItem('admin_token') || ''; }
+
+/** Fetch helper với xử lý lỗi + tự đính kèm Authorization header */
 async function api(path, opts = {}) {
   const url = API_BASE + path;
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...opts,
-  });
+  // Merge headers: mặc định Content-Type, thêm Authorization nếu có token
+  const token = getAuthToken();
+  const headers = Object.assign(
+    { 'Content-Type': 'application/json' },
+    token ? { Authorization: 'Bearer ' + token } : {},
+    opts.headers || {}
+  );
+  const res = await fetch(url, { ...opts, headers });
   if (!res.ok) {
+    // 401 → phiên hết hạn/chưa đăng nhập → báo để UI hiện lại login
+    if (res.status === 401 && window.onAuthRequired) window.onAuthRequired();
     let msg = `HTTP ${res.status}`;
     try { const j = await res.json(); msg = j.error || msg; } catch (_) {}
     throw new Error(msg);
@@ -33,6 +46,72 @@ async function api(path, opts = {}) {
   if (ct.includes('application/json')) return res.json();
   return null;
 }
+
+/* ════════════════════════════════════════════
+   AUTH — quản lý đăng nhập / phiên / user
+   ════════════════════════════════════════════ */
+const Auth = {
+  TOKEN_KEY: 'admin_token',
+  USER_KEY: 'admin_user',
+
+  getToken() { return localStorage.getItem(this.TOKEN_KEY) || ''; },
+  getUser() {
+    try { return JSON.parse(localStorage.getItem(this.USER_KEY) || 'null'); }
+    catch (_) { return null; }
+  },
+  isLoggedIn() { return !!this.getToken(); },
+
+  /** Đăng nhập. Trả {user} nếu OK, throw Error nếu sai. */
+  async login(username, password) {
+    const data = await api('/api/_auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+    localStorage.setItem(this.TOKEN_KEY, data.token);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(data.user));
+    return data.user;
+  },
+
+  /** Đăng xuất (gọi API để hủy session + xoá local) */
+  async logout() {
+    try { await api('/api/_auth/logout', { method: 'POST' }); } catch (_) {}
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.USER_KEY);
+  },
+
+  /** Xoá local-only (khi server 401, không cần gọi API) */
+  clearLocal() {
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.USER_KEY);
+  },
+
+  /** Verify token còn hợp lệ không. Trả user hoặc null. */
+  async me() {
+    if (!this.isLoggedIn()) return null;
+    try {
+      const data = await api('/api/_auth/me');
+      localStorage.setItem(this.USER_KEY, JSON.stringify(data.user));
+      return data.user;
+    } catch (_) {
+      this.clearLocal();
+      return null;
+    }
+  },
+
+  /* ─── Quản lý user (chỉ admin) ─── */
+  async listUsers() {
+    return (await api('/api/_users')).users;
+  },
+  async addUser(username, password, role) {
+    return api('/api/_users', { method: 'POST', body: JSON.stringify({ username, password, role }) });
+  },
+  async changePassword(id, password) {
+    return api('/api/_users/' + id, { method: 'PUT', body: JSON.stringify({ password }) });
+  },
+  async deleteUser(id) {
+    return api('/api/_users/' + id, { method: 'DELETE' });
+  },
+};
 
 /** Khởi tạo dữ liệu seed từ data.js local (fallback nếu API chết) */
 function seedFromLocal() {
@@ -45,6 +124,9 @@ function seedFromLocal() {
     match: JSON.parse(JSON.stringify(typeof matchData !== 'undefined' ? matchData : [])),
     mc: JSON.parse(JSON.stringify(typeof mcData !== 'undefined' ? mcData : [])),
     convo: JSON.parse(JSON.stringify(typeof convoData !== 'undefined' ? convoData : [])),
+    grammar: JSON.parse(JSON.stringify(typeof grammarData !== 'undefined' ? grammarData : [])),
+    // meta: object đơn → gói trong mảng 1 phần tử (đồng bộ với backend)
+    meta: [JSON.parse(JSON.stringify(typeof metaData !== 'undefined' ? metaData : {}))],
   };
 }
 
@@ -56,7 +138,7 @@ const Store = {
   async init() {
     try {
       const all = await api('/api/_export/all');
-      // Đảm bảo đủ 8 keys
+      // Đảm bảo đủ keys (bao gồm grammar + meta)
       this.data = {
         vocab: all.vocab || [],
         warmup: all.warmup || [],
@@ -66,6 +148,9 @@ const Store = {
         match: all.match || [],
         mc: all.mc || [],
         convo: all.convo || [],
+        grammar: all.grammar || [],
+        // meta: backend có thể trả object hoặc mảng; chuẩn hóa về mảng 1 phần tử
+        meta: Array.isArray(all.meta) ? all.meta : (all.meta ? [all.meta] : []),
       };
       this.online = true;
       console.info('[Store] Đã load từ API:', API_BASE);
@@ -90,6 +175,28 @@ const Store = {
   /* ─── Read ─── */
   list(key) { return this.data[key] || []; },
   get(key, id) { return (this.data[key] || []).find(x => String(x.n || x.id) === String(id)); },
+
+  /* ─── Meta: object đơn (luôn ở index 0 của mảng meta) ─── */
+  getMeta() { return (this.data.meta && this.data.meta[0]) || {}; },
+  async setMeta(patch) {
+    const cur = this.getMeta();
+    const next = Object.assign({}, cur, patch);
+    this.data.meta = [next];
+    if (this.online) {
+      try {
+        if (Object.keys(cur).length === 0) {
+          // Chưa có meta trên server → tạo mới
+          await api('/api/meta', { method: 'POST', body: JSON.stringify(next) });
+        } else {
+          await api('/api/meta/0', { method: 'PUT', body: JSON.stringify(patch) });
+        }
+        await this.refresh('meta');
+      } catch (e) {
+        window.onApiError && window.onApiError('Cập nhật tiêu đề thất bại: ' + e.message);
+      }
+    }
+    return next;
+  },
 
   /* ─── Create ─── */
   add(key, item) {
@@ -169,6 +276,8 @@ const Store = {
       match: data.matchData || data.match || [],
       mc: data.mcData || data.mc || [],
       convo: data.convoData || data.convo || [],
+      grammar: data.grammarData || data.grammar || [],
+      meta: data.metaData ? [data.metaData] : (Array.isArray(data.meta) ? data.meta : []),
     };
   },
 
@@ -192,6 +301,10 @@ const matchData = ${fmt(d.match)};
 const mcData = ${fmt(d.mc)};
 
 const convoData = ${fmt(d.convo)};
+
+const grammarData = ${fmt(d.grammar || [])};
+
+const metaData = ${fmt((d.meta && d.meta[0]) || {})};
 `;
   },
 

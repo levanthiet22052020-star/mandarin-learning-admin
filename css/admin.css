@@ -307,15 +307,40 @@ table.data-table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:
 .sublist-add{margin-top:10px;width:100%;padding:9px;border:1.5px dashed var(--border-2);border-radius:var(--r-sm);background:transparent;color:var(--muted);font-size:.85rem;font-weight:500;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
 .sublist-add:hover{border-color:var(--primary);color:var(--primary);}
 
+/* ── QUIZ / WARMUP sub-tabs (pill toggle) ── */
+.quiz-subtab{background:var(--surface);border:1px solid var(--border);color:var(--foreground-2);padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.quiz-subtab:hover{border-color:var(--primary);color:var(--primary);}
+.quiz-subtab.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+
 /* ── GRAMMAR card preview ── */
 .grammar-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-top:8px;font-size:.85rem;line-height:1.7;}
 .grammar-preview .gp-rule{background:var(--primary-xl);border-left:3px solid var(--primary);padding:8px 11px;border-radius:0 8px 8px 0;margin:6px 0;}
-.grammar-preview .gp-note{background:var(--warning-l);border-left:3px solid var(--warning);padding:8px 11px;border-radius:0 8px 8px 0;margin-top:6px;}
+.gp-note{background:var(--warning-l);border-left:3px solid var(--warning);padding:8px 11px;border-radius:0 8px 8px 0;margin-top:6px;font-size:.85rem;line-height:1.7;}
 
 /* ── SECTION VISIBILITY ── */
 .view{display:none;animation:fadeIn .25s ease;}
 .view.active{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* Khi chưa đăng nhập: ẩn nội dung app để không click nav được (tránh lỗi) */
+.app.app-locked{visibility:hidden;pointer-events:none;}
+.app.app-locked .sidebar,.app.app-locked .main{pointer-events:none;}
+
+/* ── LOGIN OVERLAY ── */
+.login-overlay{display:none;position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,#0f172a,#1e293b);align-items:center;justify-content:center;padding:20px;}
+.login-overlay.show{display:flex;}
+.login-card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);padding:36px 32px;width:100%;max-width:380px;animation:fadeIn .3s ease;}
+.login-logo{display:flex;justify-content:center;margin-bottom:14px;}
+.login-logo .logo-box{width:56px;height:56px;font-size:1.8rem;}
+.login-title{text-align:center;font-size:1.4rem;font-weight:700;color:var(--foreground);margin-bottom:4px;}
+.login-sub{text-align:center;color:var(--muted);font-size:.88rem;margin-bottom:22px;}
+.login-field{margin-bottom:14px;}
+.login-field label{display:block;font-size:.82rem;color:var(--foreground-2);margin-bottom:5px;font-weight:500;}
+.login-error{color:var(--danger);font-size:.85rem;min-height:18px;margin-bottom:10px;}
+.login-btn{width:100%;justify-content:center;padding:11px;font-size:.95rem;}
+
+/* ── TOPBAR USER (hiện tên user đăng nhập) ── */
+.topbar-user{font-size:.82rem;color:var(--foreground-2);font-weight:600;background:var(--primary-xl);padding:5px 12px;border-radius:999px;border:1px solid var(--primary-l);}
 
 /* ── RESPONSIVE ── */
 @media(max-width:1024px){
