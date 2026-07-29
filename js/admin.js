@@ -87,7 +87,7 @@ function showView(name, navItem) {
   if (name === 'warmup') renderWarmup();
   if (name === 'convo') renderConvo();
   if (name === 'grammar') renderGrammar();
-  if (name === 'meta') renderMeta();
+  if (name === 'lessons') renderLessons();
   if (name === 'users') renderUsers();
   // Đóng mobile sidebar
   document.querySelector('.sidebar').classList.remove('open');
@@ -1017,90 +1017,118 @@ async function deleteGrammar(gi) {
 }
 
 /* ════════════════════════════════════════════
-   META (Tiêu đề bài học / Header info)
-   Object đơn: { badge, zh, py, vn, chips: [{icon, text}] }
+   BÀI HỌC (lessons) — tiêu đề cha + nội dung con
+   Mỗi bài: { id, num, badge, zh, py, vn, chips: [{icon, text}] }
+   CRUD đầy đủ (thêm/sửa/xóa). Nội dung (vocab/grammar...)
+   liên kết qua lessonId = bài đang chọn ở topbar.
    ════════════════════════════════════════════ */
-let metaEditing = null;
-const META_ICON_OPTIONS = ['snow', 'book', 'chat', 'compass', 'target', 'mic', 'card', 'pen', 'shuffle', 'link', 'pencil', 'bulb'];
+let lessonEditing = null;   // null khi tạo mới, {id,...} khi sửa
+let lessonFormBuf = null;   // buffer tạm cho form (badge/zh/py/vn/chips)
+const LESSON_ICON_OPTIONS = ['snow', 'book', 'chat', 'compass', 'target', 'mic', 'card', 'pen', 'shuffle', 'link', 'pencil', 'bulb'];
 
-function renderMeta() {
-  const wrap = document.getElementById('meta-wrap');
-  const m = Store.getMeta();
-  if (!m || !m.zh) {
-    wrap.innerHTML = `<div class="empty">${I.empty}<h3>Chưa có tiêu đề bài học</h3><p>Thiết lập tiêu đề hiển thị ở đầu trang web.</p><button class="btn btn-primary" onclick="openMetaForm()">${I.plus} Thiết lập tiêu đề</button></div>`;
+function renderLessons() {
+  const wrap = document.getElementById('lessons-wrap');
+  const lessons = Store.listLessons();
+  if (!lessons || !lessons.length) {
+    wrap.innerHTML = `<div class="empty">${I.empty}<h3>Chưa có bài học nào</h3><p>Tạo bài học đầu tiên. Mỗi bài là một tiêu đề (chữ Hán, pinyin...) + nội dung con (từ vựng, ngữ pháp, quiz...).</p><button class="btn btn-primary" onclick="openLessonForm(null)">${I.plus} Thêm bài học</button></div>`;
     return;
   }
   wrap.innerHTML = `
-    <div class="panel">
-      <div class="panel-head">
-        <div class="panel-title">Tiêu đề bài học hiện tại</div>
-        <div class="page-actions"><button class="btn btn-primary" onclick="openMetaForm()">${I.edit} Sửa tiêu đề</button></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:14px;padding:4px 0;">
-        <div><span class="cell-muted">Badge:</span> <span class="tag tag-amber">${escapeHtml(m.badge || '')}</span></div>
-        <div><span class="cell-muted">Chữ Hán:</span> <span class="col-zh" style="font-size:1.6rem;">${escapeHtml(m.zh || '')}</span></div>
-        <div><span class="cell-muted">Phiên âm:</span> <span class="col-py">${escapeHtml(m.py || '')}</span></div>
-        <div><span class="cell-muted">Tiếng Việt:</span> <span class="col-vn">${escapeHtml(m.vn || '')}</span></div>
-        <div>
-          <span class="cell-muted">Các chip thông tin:</span>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-            ${(m.chips || []).map(c => `<span class="tag tag-blue">${escapeHtml(c.icon || '•')} → ${escapeHtml(c.text || '')}</span>`).join('')}
-          </div>
-        </div>
-      </div>
+    <div class="page-head">
+      <div class="page-title">Danh sách bài học (${lessons.length})</div>
+      <button class="btn btn-primary" onclick="openLessonForm(null)">${I.plus} Thêm bài học</button>
     </div>
-    <div class="panel" style="border-color:var(--danger-l);">
-      <div class="panel-title" style="color:var(--danger);margin-bottom:6px;">💡 Lưu ý</div>
-      <p style="color:var(--muted);font-size:.9rem;margin:0;">Tiêu đề là dữ liệu duy nhất (không thể xóa, chỉ sửa). Nếu xóa sạch chữ Hán, web sẽ không hiển thị tiêu đề.</p>
+    <div class="lesson-grid">
+      ${lessons.map(l => `
+        <div class="panel lesson-card ${Store.currentLessonId === l.id ? 'lesson-card-active' : ''}">
+          <div class="lesson-card-head">
+            <span class="tag tag-amber">${escapeHtml(l.badge || ('Bài ' + l.num))}</span>
+            <div class="page-actions" style="gap:4px;">
+              <button class="btn btn-sm btn-ghost" title="Chọn để quản lý nội dung" onclick="selectLesson('${l.id}')">${I.target} Chọn</button>
+              <button class="btn btn-sm btn-ghost" onclick="openLessonForm('${l.id}')">${I.edit}</button>
+              <button class="btn btn-sm btn-ghost" title="Xóa bài" onclick="deleteLesson('${l.id}', '${escapeAttr(l.badge || l.zh || '')}')">${I.trash}</button>
+            </div>
+          </div>
+          <div class="col-zh" style="font-size:1.6rem;margin:6px 0 2px;">${escapeHtml(l.zh || '')}</div>
+          <div class="col-py">${escapeHtml(l.py || '')}</div>
+          <div class="col-vn" style="margin-top:2px;">${escapeHtml(l.vn || '')}</div>
+          ${l.chips && l.chips.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">${l.chips.map(c => `<span class="tag tag-blue">${escapeHtml(c.text || '')}</span>`).join('')}</div>` : ''}
+          <div class="cell-muted" style="margin-top:10px;font-size:.82rem;">id: ${escapeHtml(l.id || '')}</div>
+        </div>
+      `).join('')}
     </div>`;
 }
 
-function openMetaForm() {
-  const m = Store.getMeta();
-  metaEditing = {
-    badge: m.badge || '',
-    zh: m.zh || '',
-    py: m.py || '',
-    vn: m.vn || '',
-    chips: JSON.parse(JSON.stringify(m.chips || [])),
-  };
-  if (!metaEditing.chips.length) metaEditing.chips.push({ icon: 'snow', text: '' });
-  const f = document.getElementById('meta-form');
-  f.badge.value = metaEditing.badge;
-  f.zh.value = metaEditing.zh;
-  f.py.value = metaEditing.py;
-  f.vn.value = metaEditing.vn;
-  document.getElementById('meta-modal-title').textContent = 'Sửa tiêu đề bài học';
-  renderMetaChips();
-  openModal('meta-modal');
+// Chọn bài để quản lý nội dung (vocab/grammar... của bài đó)
+function selectLesson(id) {
+  Store.setCurrentLesson(id);
+  refreshLessonSelector();
+  renderLessons();
+  toast('Đã chọn bài', 'Các mục nội dung sẽ lọc theo bài này.', 'success');
 }
 
-function renderMetaChips() {
-  const wrap = document.getElementById('meta-chips');
-  wrap.innerHTML = metaEditing.chips.map((c, i) => `
+// Cập nhật dropdown chọn bài ở topbar
+function refreshLessonSelector() {
+  const sel = document.getElementById('topbar-lesson-select');
+  if (!sel) return;
+  const lessons = Store.listLessons();
+  sel.innerHTML = lessons.map(l =>
+    `<option value="${l.id}" ${Store.currentLessonId === l.id ? 'selected' : ''}>${escapeHtml(l.badge || ('Bài ' + l.num))} · ${escapeHtml(l.zh || '')}</option>`
+  ).join('');
+}
+
+// Khi đổi bài ở dropdown topbar
+function onLessonSelectChange(el) {
+  selectLesson(el.value);
+}
+
+function openLessonForm(id) {
+  const l = id ? Store.getLesson(id) : null;
+  lessonEditing = l ? { id: l.id } : null;
+  lessonFormBuf = {
+    badge: l ? (l.badge || '') : '',
+    zh: l ? (l.zh || '') : '',
+    py: l ? (l.py || '') : '',
+    vn: l ? (l.vn || '') : '',
+    chips: l ? JSON.parse(JSON.stringify(l.chips || [])) : [],
+  };
+  if (!lessonFormBuf.chips.length) lessonFormBuf.chips.push({ icon: 'snow', text: '' });
+  const f = document.getElementById('lesson-form');
+  f.badge.value = lessonFormBuf.badge;
+  f.zh.value = lessonFormBuf.zh;
+  f.py.value = lessonFormBuf.py;
+  f.vn.value = lessonFormBuf.vn;
+  document.getElementById('lesson-modal-title').textContent = l ? 'Sửa bài học' : 'Thêm bài học';
+  renderLessonChips();
+  openModal('lesson-modal');
+}
+
+function renderLessonChips() {
+  const wrap = document.getElementById('lesson-chips');
+  wrap.innerHTML = lessonFormBuf.chips.map((c, i) => `
     <div class="sublist-item" style="align-items:center;">
       <div class="sublist-num">${i + 1}</div>
       <div class="sublist-body">
         <div class="sublist-fields">
-          <select class="input meta-chip-icon" data-i="${i}">
-            ${META_ICON_OPTIONS.map(ic => `<option value="${ic}" ${c.icon === ic ? 'selected' : ''}>${ic}</option>`).join('')}
+          <select class="input lesson-chip-icon" data-i="${i}">
+            ${LESSON_ICON_OPTIONS.map(ic => `<option value="${ic}" ${c.icon === ic ? 'selected' : ''}>${ic}</option>`).join('')}
           </select>
-          <button type="button" class="btn btn-sm btn-ghost meta-chip-del" data-i="${i}" style="justify-content:flex-end;">${I.trash} Xóa</button>
+          <button type="button" class="btn btn-sm btn-ghost lesson-chip-del" data-i="${i}" style="justify-content:flex-end;">${I.trash} Xóa</button>
         </div>
-        <input class="input meta-chip-text" data-i="${i}" placeholder="Nội dung chip (vd: 24 từ mới)" value="${escapeAttr(c.text || '')}">
+        <input class="input lesson-chip-text" data-i="${i}" placeholder="Nội dung chip (vd: 24 từ mới)" value="${escapeAttr(c.text || '')}">
       </div>
     </div>`).join('');
-  wrap.querySelectorAll('.meta-chip-icon').forEach(el => el.onchange = e => { metaEditing.chips[+e.target.dataset.i].icon = e.target.value; });
-  wrap.querySelectorAll('.meta-chip-text').forEach(el => el.oninput = e => { metaEditing.chips[+e.target.dataset.i].text = e.target.value; });
-  wrap.querySelectorAll('.meta-chip-del').forEach(b => b.onclick = e => { metaEditing.chips.splice(+e.currentTarget.dataset.i, 1); renderMetaChips(); });
+  wrap.querySelectorAll('.lesson-chip-icon').forEach(el => el.onchange = e => { lessonFormBuf.chips[+e.target.dataset.i].icon = e.target.value; });
+  wrap.querySelectorAll('.lesson-chip-text').forEach(el => el.oninput = e => { lessonFormBuf.chips[+e.target.dataset.i].text = e.target.value; });
+  wrap.querySelectorAll('.lesson-chip-del').forEach(b => b.onclick = e => { lessonFormBuf.chips.splice(+e.currentTarget.dataset.i, 1); renderLessonChips(); });
 }
 
-function addMetaChip() { metaEditing.chips.push({ icon: 'book', text: '' }); renderMetaChips(); }
+function addLessonChip() { lessonFormBuf.chips.push({ icon: 'book', text: '' }); renderLessonChips(); }
 
-async function submitMetaForm(e) {
+async function submitLessonForm(e) {
   e.preventDefault();
   const f = e.target;
-  const chips = metaEditing.chips
+  const chips = lessonFormBuf.chips
     .map(c => ({ icon: c.icon || 'book', text: (c.text || '').trim() }))
     .filter(c => c.text);
   const patch = {
@@ -1111,10 +1139,44 @@ async function submitMetaForm(e) {
     chips,
   };
   if (!patch.zh) { toast('Thiếu chữ Hán', 'Nhập ít nhất chữ Hán tiêu đề.', 'error'); return; }
-  await Store.setMeta(patch);
-  toast('Đã cập nhật', 'Tiêu đề bài học đã được lưu.', 'success');
-  closeModal('meta-modal');
-  renderMeta();
+  if (lessonEditing && lessonEditing.id) {
+    await Store.updateLesson(lessonEditing.id, patch);
+    toast('Đã cập nhật', 'Bài học đã được lưu.', 'success');
+  } else {
+    // Số thứ tự badge "Bài N" → num
+    const nm = patch.badge.match(/(\d+)/);
+    if (nm) patch.num = Number(nm[1]);
+    const created = await Store.addLesson(patch);
+    // Tự chọn bài mới tạo
+    if (created && created.id) Store.setCurrentLesson(created.id);
+    toast('Đã thêm', 'Bài học mới đã được tạo.', 'success');
+  }
+  closeModal('lesson-modal');
+  refreshLessonSelector();
+  renderLessons();
+}
+
+async function deleteLesson(id, label) {
+  const lesson = Store.getLesson(id);
+  // Đếm nội dung con để cảnh báo
+  let childCount = 0;
+  ['vocab','warmup','dialogs','fill','sort','match','mc','convo','grammar'].forEach(k => {
+    childCount += (Store.data[k] || []).filter(x => String(x.lessonId) === String(id)).length;
+  });
+  const msg = childCount > 0
+    ? `Bài "${label}" có ${childCount} mục nội dung. Xóa cả nội dung?`
+    : `Xóa bài "${label}"?`;
+  const ok = await confirmDialog({ title: 'Xóa bài học', msg });
+  if (!ok) return;
+  await Store.deleteLesson(id, childCount > 0);
+  // Nếu đang chọn bài bị xóa → chọn bài đầu
+  if (Store.currentLessonId === id) {
+    const first = Store.listLessons()[0];
+    Store.setCurrentLesson(first ? first.id : null);
+  }
+  refreshLessonSelector();
+  renderLessons();
+  toast('Đã xóa', childCount > 0 ? `Đã xóa bài + ${childCount} mục nội dung.` : 'Đã xóa bài học.', 'success');
 }
 
 /* ─── Helpers ─── */
@@ -1206,13 +1268,14 @@ function refreshAll() {
   if (id === 'warmup') renderWarmup();
   if (id === 'convo') renderConvo();
   if (id === 'grammar') renderGrammar();
-  if (id === 'meta') renderMeta();
+  if (id === 'lessons') renderLessons();
   if (id === 'users') renderUsers();
 }
 
 /* ─── Cập nhật số lượng ở sidebar ─── */
 function updateNavCounts() {
   const counts = {
+    lessons: (Store.data.lessons || []).length,
     vocab: Store.data.vocab.length,
     dialogs: Store.data.dialogs.length,
     quiz: Store.data.fill.length + Store.data.sort.length + Store.data.match.length + Store.data.mc.length,
@@ -1405,6 +1468,7 @@ async function initApp() {
   await Store.init(); // GET công khai, không cần token
   updateApiBadge();
   updateNavCounts();
+  refreshLessonSelector();
   renderDashboard();
 
   main.textContent = oldTitle || 'Tổng quan';
@@ -1425,7 +1489,7 @@ function bindAppEvents() {
   document.getElementById('warmup-form').addEventListener('submit', submitWarmupForm);
   document.getElementById('convo-form').addEventListener('submit', submitConvoForm);
   document.getElementById('grammar-form').addEventListener('submit', submitGrammarForm);
-  document.getElementById('meta-form').addEventListener('submit', submitMetaForm);
+  document.getElementById('lesson-form').addEventListener('submit', submitLessonForm);
   document.getElementById('user-form').addEventListener('submit', submitUserForm);
   document.getElementById('userpw-form').addEventListener('submit', submitUserPwForm);
   document.getElementById('login-form').addEventListener('submit', handleLogin);

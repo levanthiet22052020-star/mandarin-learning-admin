@@ -471,28 +471,32 @@ const grammarData = [
   }
 ];
 
-// Tiêu đề bài học (header info)
-const metaData = {
-  "badge": "Bài 12",
-  "zh": "昨天下雪了",
-  "py": "Zuótiān xià xuě le",
-  "vn": "Hôm qua tuyết rơi rồi",
-  "chips": [
-    {
-      "icon": "snow",
-      "text": "Chủ đề: Thời tiết & Sức khỏe"
-    },
-    {
-      "icon": "book",
-      "text": "24 từ mới"
-    },
-    {
-      "icon": "chat",
-      "text": "3 hội thoại"
-    },
-    {
-      "icon": "compass",
-      "text": "3 điểm ngữ pháp"
-    }
-  ]
-};
+// Bài học (lessons) — mỗi bài là tiêu đề cha + nội dung con (vocab/grammar...)
+const lessonsData = [
+  {
+    "id": "12",
+    "num": 12,
+    "badge": "Bài 12",
+    "zh": "昨天下雪了",
+    "py": "Zuótiān xià xuě le",
+    "vn": "Hôm qua tuyết rơi rồi",
+    "chips": [
+      {
+        "icon": "snow",
+        "text": "Chủ đề: Thời tiết & Sức khỏe"
+      },
+      {
+        "icon": "book",
+        "text": "24 từ mới"
+      },
+      {
+        "icon": "chat",
+        "text": "3 hội thoại"
+      },
+      {
+        "icon": "compass",
+        "text": "3 điểm ngữ pháp"
+      }
+    ]
+  }
+];

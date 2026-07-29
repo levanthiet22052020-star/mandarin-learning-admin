@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HSK Admin · Quản lý nội dung bài học</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="css/admin.css?v=4">
 </head>
 <body>
 
@@ -62,8 +62,8 @@
       <button class="nav-item" data-title="Ngữ pháp" data-count="grammar" onclick="showView('grammar',this)">
         <span id="ic-grammar"></span> Ngữ pháp <span class="count">0</span>
       </button>
-      <button class="nav-item" data-title="Tiêu đề bài học" onclick="showView('meta',this)">
-        <span id="ic-meta"></span> Tiêu đề bài học
+      <button class="nav-item" data-title="Bài học" data-count="lessons" onclick="showView('lessons',this)">
+        <span id="ic-lessons"></span> Bài học <span class="count">0</span>
       </button>
       <div class="nav-label">Hệ thống</div>
       <button class="nav-item" data-title="Tài khoản" data-count="" onclick="showView('users',this)">
@@ -85,6 +85,10 @@
       <button class="mobile-menu-btn" aria-label="Menu"><span id="ic-menu"></span></button>
       <h1 id="page-title">Tổng quan</h1>
       <div class="spacer"></div>
+      <label class="topbar-lesson" title="Chọn bài đang quản lý — các mục nội dung (từ vựng, ngữ pháp...) sẽ lọc theo bài này">
+        <span class="topbar-lesson-lbl">Bài:</span>
+        <select id="topbar-lesson-select" class="topbar-lesson-select" onchange="onLessonSelectChange(this)"></select>
+      </label>
       <div class="topbar-user" id="login-info" title="Tài khoản đang đăng nhập"></div>
       <button class="topbar-btn" onclick="exportData()" title="Tải file data.js để cập nhật web chính"><span id="ic-dl"></span> Xuất data.js</button>
       <button class="topbar-btn" onclick="handleLogout()" title="Đăng xuất"><span id="ic-logout"></span> Đăng xuất</button>
@@ -256,14 +260,14 @@
       </section>
 
       <!-- ══ VIEW: META (Tiêu đề bài học) ══ -->
-      <section id="view-meta" class="view">
+      <section id="view-lessons" class="view">
         <div class="page-head">
           <div>
-            <div class="page-title">Tiêu đề bài học</div>
-            <div class="page-sub">Thông tin hiển thị ở đầu trang web (badge, chữ Hán, phiên âm, các chip).</div>
+            <div class="page-title">Bài học</div>
+            <div class="page-sub">Mỗi bài học là một tiêu đề (chữ Hán, phiên âm, chip...) chứa nội dung con (từ vựng, ngữ pháp, quiz...). Chọn "Bài" ở thanh trên để quản lý nội dung từng bài.</div>
           </div>
         </div>
-        <div id="meta-wrap"></div>
+        <div id="lessons-wrap"></div>
       </section>
 
       <!-- ══ VIEW: USERS (Tài khoản) ══ -->
@@ -665,13 +669,13 @@
 </div>
 
 <!-- MODAL: META FORM -->
-<div class="modal-overlay" id="meta-modal">
-  <div class="modal" role="dialog" aria-labelledby="meta-modal-title">
+<div class="modal-overlay" id="lesson-modal">
+  <div class="modal" role="dialog" aria-labelledby="lesson-modal-title">
     <div class="modal-head">
-      <div class="modal-title" id="meta-modal-title">Sửa tiêu đề bài học</div>
-      <button class="modal-close" onclick="closeModal('meta-modal')" aria-label="Đóng"><span id="ic-x10"></span></button>
+      <div class="modal-title" id="lesson-modal-title">Thêm bài học</div>
+      <button class="modal-close" onclick="closeModal('lesson-modal')" aria-label="Đóng"><span id="ic-x10"></span></button>
     </div>
-    <form id="meta-form" class="modal-body">
+    <form id="lesson-form" class="modal-body">
       <div class="form-grid">
         <div class="form-field">
           <label>Badge (nhãn nhỏ)</label>
@@ -691,11 +695,11 @@
         </div>
       </div>
       <div style="margin:18px 0 6px;font-weight:600;color:var(--foreground-2);font-size:.88rem;">🏷️ Các chip thông tin</div>
-      <div id="meta-chips"></div>
-      <button type="button" class="sublist-add" onclick="addMetaChip()"><span id="ic-plus-mc"></span> Thêm chip</button>
+      <div id="lesson-chips"></div>
+      <button type="button" class="sublist-add" onclick="addLessonChip()"><span id="ic-plus-mc"></span> Thêm chip</button>
       <div class="form-actions">
-        <button type="button" class="btn" onclick="closeModal('meta-modal')">Hủy</button>
-        <button type="submit" class="btn btn-primary">💾 Lưu tiêu đề</button>
+        <button type="button" class="btn" onclick="closeModal('lesson-modal')">Hủy</button>
+        <button type="submit" class="btn btn-primary">💾 Lưu bài học</button>
       </div>
     </form>
   </div>
@@ -777,10 +781,10 @@
 <div class="toast-wrap" id="toast-wrap" aria-live="polite" aria-atomic="true"></div>
 
 <!-- ════ SCRIPTS ════ -->
-<script src="js/data.js?v=3"></script>
+<script src="js/data.js?v=4"></script>
 <script src="js/config.js?v=3"></script>
-<script src="js/storage.js?v=3"></script>
-<script src="js/admin.js?v=3"></script>
+<script src="js/storage.js?v=4"></script>
+<script src="js/admin.js?v=4"></script>
 <script>
   // Inject icons vào các placeholder span (giữ HTML gọn)
   document.getElementById('ic-dash').innerHTML = I.dashboard;
@@ -809,7 +813,7 @@
   document.getElementById('ic-warmup').innerHTML = I.dashboard;
   document.getElementById('ic-convo').innerHTML = I.chat;
   document.getElementById('ic-grammar').innerHTML = I.grammar;
-  document.getElementById('ic-meta').innerHTML = I.book;
+  document.getElementById('ic-lessons').innerHTML = I.book;
   // Plus buttons mới
   document.getElementById('ic-plus-wu').innerHTML = I.plus;
   document.getElementById('ic-plus-co').innerHTML = I.plus;

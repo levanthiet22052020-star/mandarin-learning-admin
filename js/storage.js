@@ -6,6 +6,7 @@
 
 // Key map giữa tên collection internal và biến trong data.js (seed local)
 const KEY_TO_VAR = {
+  lessons: 'lessonsData',
   vocab: 'vocabData',
   warmup: 'wuData',
   dialogs: 'dialogData',
@@ -16,9 +17,8 @@ const KEY_TO_VAR = {
   convo: 'convoData',
   grammar: 'grammarData',
 };
-// meta là object đơn, lưu trong mảng 1 phần tử ở phía DB
-const META_KEY = 'meta';
-const META_VAR = 'metaData';
+// Các collection nội dung liên kết bài học qua field lessonId
+const LESSON_LINKED = ['vocab', 'warmup', 'dialogs', 'fill', 'sort', 'match', 'mc', 'convo', 'grammar'];
 
 /** Lấy token đăng nhập từ localStorage (nếu có) */
 function getAuthToken() { return localStorage.getItem('admin_token') || ''; }
@@ -116,6 +116,7 @@ const Auth = {
 /** Khởi tạo dữ liệu seed từ data.js local (fallback nếu API chết) */
 function seedFromLocal() {
   return {
+    lessons: JSON.parse(JSON.stringify(typeof lessonsData !== 'undefined' ? lessonsData : [])),
     vocab: JSON.parse(JSON.stringify(typeof vocabData !== 'undefined' ? vocabData : [])),
     warmup: JSON.parse(JSON.stringify(typeof wuData !== 'undefined' ? wuData : [])),
     dialogs: JSON.parse(JSON.stringify(typeof dialogData !== 'undefined' ? dialogData : [])),
@@ -125,21 +126,21 @@ function seedFromLocal() {
     mc: JSON.parse(JSON.stringify(typeof mcData !== 'undefined' ? mcData : [])),
     convo: JSON.parse(JSON.stringify(typeof convoData !== 'undefined' ? convoData : [])),
     grammar: JSON.parse(JSON.stringify(typeof grammarData !== 'undefined' ? grammarData : [])),
-    // meta: object đơn → gói trong mảng 1 phần tử (đồng bộ với backend)
-    meta: [JSON.parse(JSON.stringify(typeof metaData !== 'undefined' ? metaData : {}))],
   };
 }
 
 const Store = {
   data: null,
   online: false,
+  // Bài học đang chọn để quản lý nội dung (admin). Khởi tạo = bài đầu.
+  currentLessonId: null,
 
   /** Load toàn bộ dữ liệu từ API. Fallback về seed local nếu lỗi. */
   async init() {
     try {
       const all = await api('/api/_export/all');
-      // Đảm bảo đủ keys (bao gồm grammar + meta)
       this.data = {
+        lessons: all.lessons || [],
         vocab: all.vocab || [],
         warmup: all.warmup || [],
         dialogs: all.dialogs || [],
@@ -149,8 +150,6 @@ const Store = {
         mc: all.mc || [],
         convo: all.convo || [],
         grammar: all.grammar || [],
-        // meta: backend có thể trả object hoặc mảng; chuẩn hóa về mảng 1 phần tử
-        meta: Array.isArray(all.meta) ? all.meta : (all.meta ? [all.meta] : []),
       };
       this.online = true;
       console.info('[Store] Đã load từ API:', API_BASE);
@@ -158,6 +157,10 @@ const Store = {
       console.warn('[Store] API không khả dụng, dùng seed local:', e.message);
       this.data = seedFromLocal();
       this.online = false;
+    }
+    // Mặc định chọn bài đầu tiên
+    if (this.data.lessons && this.data.lessons.length) {
+      this.currentLessonId = this.data.lessons[0].id;
     }
     return this.data;
   },
@@ -173,33 +176,81 @@ const Store = {
   },
 
   /* ─── Read ─── */
-  list(key) { return this.data[key] || []; },
+  // list(key, lessonId?): trả toàn bộ hoặc lọc theo bài đang chọn / lessonId truyền vào
+  list(key, lessonId) {
+    const arr = this.data[key] || [];
+    const lid = (lessonId === undefined) ? this.currentLessonId : lessonId;
+    // lessons: trả toàn bộ (không lọc theo chính nó)
+    if (key === 'lessons' || lid === null || lid === undefined) return arr;
+    if (!LESSON_LINKED.includes(key)) return arr;
+    return arr.filter(x => String(x.lessonId) === String(lid));
+  },
   get(key, id) { return (this.data[key] || []).find(x => String(x.n || x.id) === String(id)); },
 
-  /* ─── Meta: object đơn (luôn ở index 0 của mảng meta) ─── */
-  getMeta() { return (this.data.meta && this.data.meta[0]) || {}; },
-  async setMeta(patch) {
-    const cur = this.getMeta();
-    const next = Object.assign({}, cur, patch);
-    this.data.meta = [next];
+  /* ─── Bài học (lessons) — CRUD đầy đủ ─── */
+  listLessons() { return this.data.lessons || []; },
+  getLesson(id) { return (this.data.lessons || []).find(l => String(l.id) === String(id)); },
+  currentLesson() { return this.getLesson(this.currentLessonId) || {}; },
+  setCurrentLesson(id) { this.currentLessonId = id; },
+
+  async addLesson(lesson) {
+    // num tự tăng nếu không có
+    if (lesson.num == null) {
+      const max = (this.data.lessons || []).reduce((m, l) => Math.max(m, Number(l.num) || 0), 0);
+      lesson.num = max + 1;
+    }
     if (this.online) {
       try {
-        if (Object.keys(cur).length === 0) {
-          // Chưa có meta trên server → tạo mới
-          await api('/api/meta', { method: 'POST', body: JSON.stringify(next) });
-        } else {
-          await api('/api/meta/0', { method: 'PUT', body: JSON.stringify(patch) });
-        }
-        await this.refresh('meta');
-      } catch (e) {
-        window.onApiError && window.onApiError('Cập nhật tiêu đề thất bại: ' + e.message);
-      }
+        const saved = await api('/api/lessons', { method: 'POST', body: JSON.stringify(lesson) });
+        this.data.lessons.push(saved);
+        this.data.lessons.sort((a, b) => (Number(a.num) || 0) - (Number(b.num) || 0));
+        return saved;
+      } catch (e) { window.onApiError && window.onApiError('Thêm bài thất bại: ' + e.message); }
     }
-    return next;
+    this.data.lessons.push(lesson);
+    return lesson;
+  },
+
+  async updateLesson(id, patch) {
+    const i = (this.data.lessons || []).findIndex(l => String(l.id) === String(id));
+    if (i === -1) return null;
+    this.data.lessons[i] = Object.assign({}, this.data.lessons[i], patch);
+    if (this.online) {
+      try {
+        await api('/api/lessons/' + id, { method: 'PUT', body: JSON.stringify(patch) });
+      } catch (e) { window.onApiError && window.onApiError('Sửa bài thất bại: ' + e.message); }
+    }
+    return this.data.lessons[i];
+  },
+
+  async deleteLesson(id, cascade) {
+    const i = (this.data.lessons || []).findIndex(l => String(l.id) === String(id));
+    if (i !== -1) this.data.lessons.splice(i, 1);
+    if (this.online) {
+      try {
+        const q = cascade ? '?cascade=1' : '';
+        await api('/api/lessons/' + id + q, { method: 'DELETE' });
+        if (cascade) {
+          // Xóa nội dung con khỏi cache local
+          LESSON_LINKED.forEach(k => {
+            this.data[k] = (this.data[k] || []).filter(x => String(x.lessonId) !== String(id));
+          });
+        }
+      } catch (e) { window.onApiError && window.onApiError('Xóa bài thất bại: ' + e.message); }
+    } else if (cascade) {
+      LESSON_LINKED.forEach(k => {
+        this.data[k] = (this.data[k] || []).filter(x => String(x.lessonId) !== String(id));
+      });
+    }
+    return true;
   },
 
   /* ─── Create ─── */
   add(key, item) {
+    // Tự gắn lessonId = bài đang chọn cho nội dung mới
+    if (LESSON_LINKED.includes(key) && this.currentLessonId && !item.lessonId) {
+      item.lessonId = this.currentLessonId;
+    }
     if (this.online) {
       // Async fire-and-forget, không block UI; refresh sau
       api('/api/' + key, { method: 'POST', body: JSON.stringify(item) })
@@ -220,7 +271,7 @@ const Store = {
   update(key, id, patch) {
     const arr = this.data[key] || [];
     const i = arr.findIndex(x => String(x.n || x.id) === String(id));
-    if (i !== -1) arr[i] = Object.assign({}, arr[i], patch, { n: id, id: id });
+    if (i !== -1) arr[i] = Object.assign({}, arr[i], patch);
     if (this.online) {
       api('/api/' + key + '/' + id, { method: 'PUT', body: JSON.stringify(patch) })
         .then(() => this.refresh(key))
@@ -268,6 +319,7 @@ const Store = {
       return;
     }
     this.data = {
+      lessons: data.lessonsData || data.lessons || [],
       vocab: data.vocabData || data.vocab || [],
       warmup: data.wuData || data.warmup || [],
       dialogs: data.dialogData || data.dialogs || [],
@@ -277,7 +329,6 @@ const Store = {
       mc: data.mcData || data.mc || [],
       convo: data.convoData || data.convo || [],
       grammar: data.grammarData || data.grammar || [],
-      meta: data.metaData ? [data.metaData] : (Array.isArray(data.meta) ? data.meta : []),
     };
   },
 
@@ -286,6 +337,8 @@ const Store = {
     const fmt = (arr) => JSON.stringify(arr, null, 2);
     const d = this.data;
     return `/* Tự sinh từ HSK Admin · ${new Date().toLocaleString('vi-VN')} */
+const lessonsData = ${fmt(d.lessons || [])};
+
 const vocabData = ${fmt(d.vocab)};
 
 const wuData = ${fmt(d.warmup)};
@@ -303,8 +356,6 @@ const mcData = ${fmt(d.mc)};
 const convoData = ${fmt(d.convo)};
 
 const grammarData = ${fmt(d.grammar || [])};
-
-const metaData = ${fmt((d.meta && d.meta[0]) || {})};
 `;
   },
 
