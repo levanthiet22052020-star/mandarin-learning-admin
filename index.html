@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HSK Admin · Quản lý nội dung bài học</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/admin.css?v=4">
+<link rel="stylesheet" href="css/admin.css?v=5">
 </head>
 <body>
 
@@ -43,6 +43,9 @@
       <button class="nav-item active" data-title="Tổng quan" data-count="" onclick="showView('dashboard',this)">
         <span id="ic-dash"></span> Tổng quan
       </button>
+      <button class="nav-item" data-title="Bài học" data-count="lessons" onclick="showView('lessons',this)">
+        <span id="ic-lessons"></span> Bài học <span class="count">0</span>
+      </button>
       <div class="nav-label">Nội dung bài học</div>
       <button class="nav-item" data-title="Từ vựng" data-count="vocab" onclick="showView('vocab',this)">
         <span id="ic-vocab"></span> Từ vựng <span class="count">0</span>
@@ -61,9 +64,6 @@
       </button>
       <button class="nav-item" data-title="Ngữ pháp" data-count="grammar" onclick="showView('grammar',this)">
         <span id="ic-grammar"></span> Ngữ pháp <span class="count">0</span>
-      </button>
-      <button class="nav-item" data-title="Bài học" data-count="lessons" onclick="showView('lessons',this)">
-        <span id="ic-lessons"></span> Bài học <span class="count">0</span>
       </button>
       <div class="nav-label">Hệ thống</div>
       <button class="nav-item" data-title="Tài khoản" data-count="" onclick="showView('users',this)">
@@ -781,10 +781,10 @@
 <div class="toast-wrap" id="toast-wrap" aria-live="polite" aria-atomic="true"></div>
 
 <!-- ════ SCRIPTS ════ -->
-<script src="js/data.js?v=4"></script>
+<script src="js/data.js?v=5"></script>
 <script src="js/config.js?v=3"></script>
-<script src="js/storage.js?v=4"></script>
-<script src="js/admin.js?v=4"></script>
+<script src="js/storage.js?v=5"></script>
+<script src="js/admin.js?v=5"></script>
 <script>
   // Inject icons vào các placeholder span (giữ HTML gọn)
   document.getElementById('ic-dash').innerHTML = I.dashboard;
