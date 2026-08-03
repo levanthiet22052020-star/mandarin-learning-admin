@@ -254,8 +254,21 @@ const Store = {
     if (this.online) {
       // Async fire-and-forget, không block UI; refresh sau
       api('/api/' + key, { method: 'POST', body: JSON.stringify(item) })
-        .then(saved => { this.data[key].push(saved); this.refresh(key); if (window.onStoreChange) window.onStoreChange(); })
-        .catch(e => window.onApiError && window.onApiError('Thêm thất bại: ' + e.message));
+        .then(saved => {
+          // Xóa item optimistic tạm trước khi push item thật (chống render trùng 2 lần)
+          const i = this.data[key].indexOf(item);
+          if (i !== -1) this.data[key].splice(i, 1);
+          this.data[key].push(saved);
+          this.refresh(key);
+          if (window.onStoreChange) window.onStoreChange();
+        })
+        .catch(e => {
+          // Lỗi: cũng dọn optimistic item rác để UI không còn dòng không-id
+          const i = this.data[key].indexOf(item);
+          if (i !== -1) this.data[key].splice(i, 1);
+          if (window.onStoreChange) window.onStoreChange();
+          window.onApiError && window.onApiError('Thêm thất bại: ' + e.message);
+        });
       // Optimistic: thêm tạm với id giả để UI hiển thị ngay
       this.data[key].push(item);
       return item;

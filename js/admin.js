@@ -8,7 +8,11 @@ const I = {
   book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
   quiz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>',
+  shuffle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
   grammar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>',
+  layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
   plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
   edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
   trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>',
@@ -74,6 +78,8 @@ function showView(name, navItem) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const view = document.getElementById('view-' + name);
   if (view) view.classList.add('active');
+  // Tự tìm nav-item nếu không truyền (vd. gọi từ dashboard shortcut)
+  if (!navItem) navItem = document.querySelector('.nav-item[onclick*="showView(\'' + name + '\'"]');
   if (navItem) {
     navItem.classList.add('active');
     const title = navItem.dataset.title;
@@ -82,6 +88,7 @@ function showView(name, navItem) {
   // Render tương ứng khi mở view
   if (name === 'dashboard') renderDashboard();
   if (name === 'vocab') renderVocab();
+  if (name === 'flashcards') renderFlashcards();
   if (name === 'dialogs') renderDialogs();
   if (name === 'quiz') renderQuiz();
   if (name === 'warmup') renderWarmup();
@@ -89,36 +96,33 @@ function showView(name, navItem) {
   if (name === 'grammar') renderGrammar();
   if (name === 'lessons') renderLessons();
   if (name === 'users') renderUsers();
-  // Đóng mobile sidebar
+  // Đóng mobile sidebar (kèm backdrop)
   document.querySelector('.sidebar').classList.remove('open');
+  const bd = document.getElementById('sidebar-backdrop');
+  if (bd) bd.classList.remove('show');
 }
 
 /* ════════════════════════════════════════════
    DASHBOARD
    ════════════════════════════════════════════ */
 function renderDashboard() {
-  const d = Store.data;
-  const counts = {
-    vocab: d.vocab.length,
-    dialogs: d.dialogs.length,
-    quiz: d.fill.length + d.sort.length + d.match.length + d.mc.length,
-    warmup: d.warmup.length,
-    convo: d.convo.length,
-    grammar: (d.grammar || []).length,
-  };
   const cards = [
-    { ic: 'blue', svg: I.book, num: counts.vocab, lbl: 'Từ vựng' },
-    { ic: 'cyan', svg: I.chat, num: counts.dialogs, lbl: 'Hội thoại' },
-    { ic: 'pink', svg: I.quiz, num: counts.quiz, lbl: 'Câu hỏi bài tập' },
-    { ic: 'amber', svg: I.dashboard, num: counts.warmup, lbl: 'Card khởi động' },
-    { ic: 'green', svg: I.chat, num: counts.convo, lbl: 'Đoạn luyện nói' },
-    { ic: 'purple', svg: I.grammar, num: counts.grammar, lbl: 'Điểm ngữ pháp' },
+    { ic: 'blue', svg: I.book, lbl: 'Từ vựng', go: "showView('vocab')" },
+    { ic: 'indigo', svg: I.layers, lbl: 'Thẻ nhớ', go: "showView('flashcards')" },
+    { ic: 'cyan', svg: I.chat, lbl: 'Hội thoại', go: "showView('dialogs')" },
+    { ic: 'pink', svg: I.quiz, lbl: 'Trắc nghiệm', go: "showQuizType('mc')" },
+    { ic: 'amber', svg: I.pen, lbl: 'Điền từ', go: "showQuizType('fill')" },
+    { ic: 'orange', svg: I.shuffle, lbl: 'Sắp xếp', go: "showQuizType('sort')" },
+    { ic: 'teal', svg: I.link, lbl: 'Nối câu', go: "showQuizType('match')" },
+    { ic: 'green', svg: I.dashboard, lbl: 'Khởi động', go: "showView('warmup')" },
+    { ic: 'rose', svg: I.chat, lbl: 'Luyện nói', go: "showView('convo')" },
+    { ic: 'purple', svg: I.grammar, lbl: 'Ngữ pháp', go: "showView('grammar')" },
   ];
   document.getElementById('stats-grid').innerHTML = cards.map(c => `
-    <div class="stat-card">
+    <button class="stat-card shortcut" onclick="${c.go}">
       <div class="stat-ic ${c.ic}">${c.svg}</div>
-      <div><div class="stat-num">${c.num}</div><div class="stat-lbl">${c.lbl}</div></div>
-    </div>`).join('');
+      <div class="stat-lbl">${c.lbl}</div>
+    </button>`).join('');
 
   // Quick actions
   const qa = document.getElementById('quick-actions');
@@ -220,7 +224,6 @@ function submitVocabForm(e) {
   }
   closeModal('vocab-modal');
   renderVocab();
-  updateNavCounts();
 }
 
 async function deleteVocab(n) {
@@ -234,7 +237,48 @@ async function deleteVocab(n) {
   Store.remove('vocab', n);
   toast('Đã xóa', `Từ "${v.zh}" đã bị xóa.`, 'success');
   renderVocab();
-  updateNavCounts();
+}
+
+/* ════════════════════════════════════════════
+   FLASHCARDS (Thẻ nhớ) — xem trước vocab dạng thẻ
+   Không có collection riêng; đọc từ Store.list('vocab')
+   của bài đang chọn, đúng như web học render flashcard.
+   ════════════════════════════════════════════ */
+function vocabIcon(v) {
+  // Ưu tiên emoji riêng, fallback theo từ loại
+  if (v.em) return v.em;
+  const m = {
+    'Danh từ': '📕', 'Động từ': '🎬', 'Tính từ': '✨', 'Phó từ': '💨',
+    'Đại từ': '👉', 'Trợ từ': '🔹', 'Số lượng từ': '🔢', 'Lượng từ': '📐'
+  };
+  return m[v.pos] || '🔖';
+}
+
+function renderFlashcards() {
+  const wrap = document.getElementById('flashcards-wrap');
+  const list = Store.list('vocab');
+  const cnt = document.getElementById('flashcards-count');
+  if (cnt) cnt.textContent = `${list.length} thẻ · bài ${Store.currentLesson() ? (Store.currentLesson().badge || '') : '?'}`.trim();
+
+  if (!list.length) {
+    wrap.innerHTML = `<div class="empty">${I.empty}<h3>Chưa có thẻ nhớ</h3><p>Thẻ nhớ được tạo từ Từ vựng. Thêm từ vựng để tạo thẻ.</p><button class="btn btn-primary" onclick="openVocabForm()">${I.plus} Thêm từ làm thẻ</button></div>`;
+    return;
+  }
+  wrap.innerHTML = `<div class="flash-grid">${list.map(v => `
+    <div class="flash-card-preview">
+      <div class="flash-front">
+        <div class="flash-em">${vocabIcon(v)}</div>
+        <div class="flash-zh">${escapeHtml(v.zh || '')}</div>
+        <div class="flash-py">${escapeHtml(v.py || '')}</div>
+      </div>
+      <div class="flash-back">
+        <div class="flash-vn">${escapeHtml(v.vn || '')}</div>
+        ${(v.ex_zh || v.ex_vn) ? `<div class="flash-ex">${escapeHtml(v.ex_zh || '')}${v.ex_vn ? ' — ' + escapeHtml(v.ex_vn) : ''}</div>` : ''}
+      </div>
+      <div class="flash-actions">
+        <button class="row-btn" title="Sửa từ này" onclick="openVocabForm(${v.n})">${I.edit}</button>
+      </div>
+    </div>`).join('')}</div>`;
 }
 
 /* ════════════════════════════════════════════
@@ -251,8 +295,8 @@ function renderDialogs() {
     <div class="panel">
       <div class="panel-head">
         <div>
-          <div class="panel-title">Hội thoại #${d.id} · ${d.scene || ''}</div>
-          <div style="color:var(--muted);font-size:.85rem;margin-top:3px;">${(d.chars || []).join(' · ')} — ${d.lines.length} câu</div>
+          <div class="panel-title">Hội thoại #${d.id} · ${escapeHtml(d.scene || '')}</div>
+          <div style="color:var(--muted);font-size:.85rem;margin-top:3px;">${(d.chars || []).map(escapeHtml).join(' · ')} — ${d.lines.length} câu</div>
         </div>
         <div class="page-actions">
           <button class="row-btn" title="Sửa" onclick='openDialogForm(${d.id})'>${I.edit}</button>
@@ -267,10 +311,10 @@ function renderDialogs() {
               ${d.lines.map((l, i) => `
                 <tr>
                   <td class="col-num">${i + 1}</td>
-                  <td><span class="tag tag-${['blue', 'green', 'purple'][l.sp % 3]}">${d.chars[l.sp] || '?'}</span></td>
-                  <td class="col-zh">${l.zh}</td>
-                  <td class="col-py">${l.py}</td>
-                  <td class="col-vn">${l.vn}</td>
+                  <td><span class="tag tag-${['blue', 'green', 'purple'][l.sp % 3]}">${escapeHtml(d.chars[l.sp] || '?')}</span></td>
+                  <td class="col-zh">${escapeHtml(l.zh)}</td>
+                  <td class="col-py">${escapeHtml(l.py)}</td>
+                  <td class="col-vn">${escapeHtml(l.vn)}</td>
                 </tr>`).join('')}
             </tbody>
           </table>
@@ -361,7 +405,6 @@ function submitDialogForm(e) {
   }
   closeModal('dialog-modal');
   renderDialogs();
-  updateNavCounts();
 }
 
 async function deleteDialog(id) {
@@ -375,22 +418,37 @@ async function deleteDialog(id) {
   Store.remove('dialogs', id);
   toast('Đã xóa', 'Hội thoại đã bị xóa.', 'success');
   renderDialogs();
-  updateNavCounts();
 }
 
 /* ════════════════════════════════════════════
-   QUIZ (4 loại: mc, fill, sort, match)
+   QUIZ (4 loại: mc, fill, sort, match — mỗi loại 1 mục sidebar riêng)
    ════════════════════════════════════════════ */
 let quizTab = 'mc'; // mc | fill | sort | match
-function setQuizTab(t, btn) {
+const QUIZ_META = {
+  mc:    { title: 'Trắc nghiệm', add: 'openMcForm()' },
+  fill:  { title: 'Điền từ',     add: 'openFillForm()' },
+  sort:  { title: 'Sắp xếp',     add: 'openSortForm()' },
+  match: { title: 'Nối câu',     add: 'openMatchForm()' },
+};
+
+// Mở mục bài tập với loại cụ thể (từ sidebar nav-item)
+function showQuizType(t, navItem) {
   quizTab = t;
-  document.querySelectorAll('.quiz-subtab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderQuiz();
+  showView('quiz', navItem);
 }
+
+// setQuizTab giữ lại (case còn dùng ở vài nơi), giờ chỉ set biến + render
+function setQuizTab(t, btn) { quizTab = t; renderQuiz(); }
 
 function renderQuiz() {
   const wrap = document.getElementById('quiz-content');
+  const meta = QUIZ_META[quizTab] || QUIZ_META.mc;
+  // Title + nút Thêm động theo loại đang mở
+  const tEl = document.getElementById('quiz-page-title');
+  if (tEl) tEl.textContent = 'Quản lý ' + meta.title.toLowerCase();
+  const addBtn = document.getElementById('quiz-add-btn');
+  if (addBtn) addBtn.innerHTML = `<button class="btn btn-primary" onclick="${meta.add}">${I.plus} Thêm ${meta.title.toLowerCase()}</button>`;
+
   const items = Store.list(quizTab);
   document.getElementById('quiz-count').textContent = `${items.length} câu`;
 
@@ -411,7 +469,7 @@ function renderMc(wrap, items) {
       <div style="display:flex;gap:10px;align-items:flex-start;">
         <span class="sublist-num" style="margin-top:2px;">${i + 1}</span>
         <div style="flex:1;">
-          <div class="col-zh" style="margin-bottom:8px;">${q.q}</div>
+          <div class="col-zh" style="margin-bottom:8px;">${escapeHtml(q.q)}</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;">
             ${q.opts.map((o, j) => `<span class="tag ${j === q.ans ? 'tag-green' : 'tag-gray'}">${String.fromCharCode(65 + j)}. ${escapeHtml(o)}</span>`).join('')}
           </div>
@@ -447,7 +505,6 @@ function submitMcForm(e) {
   else { Store.add('mc', item); toast('Đã thêm', 'Câu trắc nghiệm mới đã được tạo.', 'success'); }
   closeModal('mc-modal');
   renderQuiz();
-  updateNavCounts();
 }
 
 /* --- Điền từ (fill) --- */
@@ -483,7 +540,7 @@ function submitFillForm(e) {
   if (!item.pre || !item.blank || !item.ans) { toast('Thiếu thông tin', 'Nhập phần trước, đáp án và chữ cần điền.', 'error'); return; }
   if (f.n.value) { Store.update('fill', Number(f.n.value), item); toast('Đã cập nhật', 'Câu điền từ đã được lưu.', 'success'); }
   else { Store.add('fill', item); toast('Đã thêm', 'Câu điền từ mới đã được tạo.', 'success'); }
-  closeModal('fill-modal'); renderQuiz(); updateNavCounts();
+  closeModal('fill-modal'); renderQuiz();
 }
 
 /* --- Sắp xếp (sort) --- */
@@ -494,8 +551,8 @@ function renderSort(wrap, items) {
       <div style="display:flex;gap:10px;align-items:flex-start;">
         <span class="sublist-num" style="margin-top:2px;">${i + 1}</span>
         <div style="flex:1;">
-          <div class="col-zh" style="margin-bottom:6px;">${q.ans}</div>
-          <div class="cell-muted">📋 ${escapeHtml(q.vn)} · Từ: ${(q.words || []).join(' | ')}</div>
+          <div class="col-zh" style="margin-bottom:6px;">${escapeHtml(q.ans)}</div>
+          <div class="cell-muted">📋 ${escapeHtml(q.vn)} · Từ: ${(q.words || []).map(escapeHtml).join(' | ')}</div>
         </div>
         <div style="display:flex;gap:4px;">
           <button class="row-btn" onclick="openSortForm(${q.n})">${I.edit}</button>
@@ -519,7 +576,7 @@ function submitSortForm(e) {
   if (!words.length || !item.ans || !item.vn) { toast('Thiếu thông tin', 'Nhập danh sách từ, đáp án đúng và nghĩa.', 'error'); return; }
   if (f.n.value) { Store.update('sort', Number(f.n.value), item); toast('Đã cập nhật', 'Câu sắp xếp đã được lưu.', 'success'); }
   else { Store.add('sort', item); toast('Đã thêm', 'Câu sắp xếp mới đã được tạo.', 'success'); }
-  closeModal('sort-modal'); renderQuiz(); updateNavCounts();
+  closeModal('sort-modal'); renderQuiz();
 }
 
 /* --- Nối câu (match) --- */
@@ -553,7 +610,7 @@ function submitMatchForm(e) {
   if (!item.left || !item.right) { toast('Thiếu thông tin', 'Nhập cả vế trái và vế phải.', 'error'); return; }
   if (f.n.value) { Store.update('match', Number(f.n.value), item); toast('Đã cập nhật', 'Cặp nối đã được lưu.', 'success'); }
   else { Store.add('match', item); toast('Đã thêm', 'Cặp nối mới đã được tạo.', 'success'); }
-  closeModal('match-modal'); renderQuiz(); updateNavCounts();
+  closeModal('match-modal'); renderQuiz();
 }
 
 /* --- Xóa chung + Empty state --- */
@@ -562,7 +619,7 @@ async function deleteQuizItem(key, n) {
   if (!ok) return;
   Store.remove(key, n);
   toast('Đã xóa', 'Câu hỏi đã bị xóa.', 'success');
-  renderQuiz(); updateNavCounts();
+  renderQuiz();
 }
 function quizEmpty(name) {
   const fnMap = { 'trắc nghiệm': 'openMcForm()', 'điền từ': 'openFillForm()', 'sắp xếp': 'openSortForm()', 'nối câu': 'openMatchForm()' };
@@ -636,7 +693,6 @@ function submitWarmupForm(e) {
   }
   closeModal('warmup-modal');
   renderWarmup();
-  updateNavCounts();
 }
 
 async function deleteWarmup(letter) {
@@ -650,7 +706,6 @@ async function deleteWarmup(letter) {
   Store.remove('warmup', letter);
   toast('Đã xóa', 'Card khởi động đã bị xóa.', 'success');
   renderWarmup();
-  updateNavCounts();
 }
 
 /* ════════════════════════════════════════════
@@ -751,7 +806,6 @@ function submitConvoForm(e) {
   }
   closeModal('convo-modal');
   renderConvo();
-  updateNavCounts();
 }
 
 async function deleteConvo(ci) {
@@ -765,7 +819,6 @@ async function deleteConvo(ci) {
   Store.remove('convo', ci);
   toast('Đã xóa', 'Đoạn luyện nói đã bị xóa.', 'success');
   renderConvo();
-  updateNavCounts();
 }
 
 /* ════════════════════════════════════════════
@@ -999,7 +1052,6 @@ function submitGrammarForm(e) {
   }
   closeModal('grammar-modal');
   renderGrammar();
-  updateNavCounts();
 }
 
 async function deleteGrammar(gi) {
@@ -1013,7 +1065,6 @@ async function deleteGrammar(gi) {
   Store.remove('grammar', gi);
   toast('Đã xóa', 'Điểm ngữ pháp đã bị xóa.', 'success');
   renderGrammar();
-  updateNavCounts();
 }
 
 /* ════════════════════════════════════════════
@@ -1181,7 +1232,7 @@ async function deleteLesson(id, label) {
 
 /* ─── Helpers ─── */
 function escapeHtml(s) { return String(s || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
-function escapeAttr(s) { return String(s || '').replace(/"/g, '&quot;'); }
+function escapeAttr(s) { return String(s || '').replace(/["']/g, c => ({ '"': '&quot;', "'": '&#39;' }[c])); }
 
 /* ─── Import / Export / Reset ─── */
 async function exportData() {
@@ -1257,12 +1308,12 @@ async function resetAll() {
 }
 
 function refreshAll() {
-  updateNavCounts();
   const activeView = document.querySelector('.view.active');
   if (!activeView) return;
   const id = activeView.id.replace('view-', '');
   if (id === 'dashboard') renderDashboard();
   if (id === 'vocab') renderVocab();
+  if (id === 'flashcards') renderFlashcards();
   if (id === 'dialogs') renderDialogs();
   if (id === 'quiz') renderQuiz();
   if (id === 'warmup') renderWarmup();
@@ -1270,23 +1321,6 @@ function refreshAll() {
   if (id === 'grammar') renderGrammar();
   if (id === 'lessons') renderLessons();
   if (id === 'users') renderUsers();
-}
-
-/* ─── Cập nhật số lượng ở sidebar ─── */
-function updateNavCounts() {
-  const counts = {
-    lessons: (Store.data.lessons || []).length,
-    vocab: Store.data.vocab.length,
-    dialogs: Store.data.dialogs.length,
-    quiz: Store.data.fill.length + Store.data.sort.length + Store.data.match.length + Store.data.mc.length,
-    warmup: Store.data.warmup.length,
-    convo: Store.data.convo.length,
-    grammar: (Store.data.grammar || []).length,
-  };
-  document.querySelectorAll('.nav-item[data-count]').forEach(n => {
-    const key = n.dataset.count;
-    if (counts[key] !== undefined) n.querySelector('.count').textContent = counts[key];
-  });
 }
 
 /* ─── API status indicator (online/offline) ─── */
@@ -1467,7 +1501,6 @@ async function initApp() {
 
   await Store.init(); // GET công khai, không cần token
   updateApiBadge();
-  updateNavCounts();
   refreshLessonSelector();
   renderDashboard();
 
@@ -1497,9 +1530,19 @@ function bindAppEvents() {
   document.querySelectorAll('.modal-overlay').forEach(ov => {
     ov.addEventListener('click', e => { if (e.target === ov && ov.id !== 'login-overlay') ov.classList.remove('show'); });
   });
-  // Mobile menu toggle
+  // Mobile menu toggle (hamburger + backdrop đều điều khiển drawer)
   const mb = document.querySelector('.mobile-menu-btn');
-  if (mb) mb.addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('open'));
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (mb) mb.addEventListener('click', () => {
+    const sb = document.querySelector('.sidebar');
+    const opening = !sb.classList.contains('open');
+    sb.classList.toggle('open');
+    if (backdrop) backdrop.classList.toggle('show', opening);
+  });
+  if (backdrop) backdrop.addEventListener('click', () => {
+    document.querySelector('.sidebar').classList.remove('open');
+    backdrop.classList.remove('show');
+  });
   // Vocab filter events
   const vf = document.getElementById('vocab-filter');
   if (vf) {

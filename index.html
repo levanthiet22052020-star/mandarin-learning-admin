@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HSK Admin · Quản lý nội dung bài học</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/admin.css?v=5">
+<link rel="stylesheet" href="css/admin.css?v=6">
 </head>
 <body>
 
@@ -17,11 +17,11 @@
     <p class="login-sub">Đăng nhập để quản lý nội dung bài học</p>
     <div class="login-field">
       <label for="login-username">Tên đăng nhập</label>
-      <input class="input" id="login-username" name="username" type="text" autocomplete="username" placeholder="admin" required>
+      <input class="input" id="login-username" name="username" type="text" autocomplete="username" required>
     </div>
     <div class="login-field">
       <label for="login-password">Mật khẩu</label>
-      <input class="input" id="login-password" name="password" type="password" autocomplete="current-password" placeholder="••••••" required>
+      <input class="input" id="login-password" name="password" type="password" autocomplete="current-password" required>
     </div>
     <div class="login-error" id="login-error" role="alert"></div>
     <button type="submit" class="btn btn-primary login-btn">Đăng nhập</button>
@@ -40,34 +40,46 @@
     </div>
     <nav class="sidebar-nav">
       <div class="nav-label">Quản lý chung</div>
-      <button class="nav-item active" data-title="Tổng quan" data-count="" onclick="showView('dashboard',this)">
+      <button class="nav-item active" data-title="Tổng quan" onclick="showView('dashboard',this)">
         <span id="ic-dash"></span> Tổng quan
       </button>
-      <button class="nav-item" data-title="Bài học" data-count="lessons" onclick="showView('lessons',this)">
-        <span id="ic-lessons"></span> Bài học <span class="count">0</span>
+      <button class="nav-item" data-title="Bài học" onclick="showView('lessons',this)">
+        <span id="ic-lessons"></span> Bài học
       </button>
       <div class="nav-label">Nội dung bài học</div>
-      <button class="nav-item" data-title="Từ vựng" data-count="vocab" onclick="showView('vocab',this)">
-        <span id="ic-vocab"></span> Từ vựng <span class="count">0</span>
+      <button class="nav-item" data-title="Từ vựng" onclick="showView('vocab',this)">
+        <span id="ic-vocab"></span> Từ vựng
       </button>
-      <button class="nav-item" data-title="Hội thoại" data-count="dialogs" onclick="showView('dialogs',this)">
-        <span id="ic-dlg"></span> Hội thoại <span class="count">0</span>
+      <button class="nav-item" data-title="Thẻ nhớ" onclick="showView('flashcards',this)">
+        <span id="ic-flash"></span> Thẻ nhớ
       </button>
-      <button class="nav-item" data-title="Bài tập" data-count="quiz" onclick="showView('quiz',this)">
-        <span id="ic-quiz"></span> Bài tập <span class="count">0</span>
+      <button class="nav-item" data-title="Hội thoại" onclick="showView('dialogs',this)">
+        <span id="ic-dlg"></span> Hội thoại
       </button>
-      <button class="nav-item" data-title="Khởi động" data-count="warmup" onclick="showView('warmup',this)">
-        <span id="ic-warmup"></span> Khởi động <span class="count">0</span>
+      <button class="nav-item" data-title="Trắc nghiệm" onclick="showQuizType('mc',this)">
+        <span id="ic-quiz-mc"></span> Trắc nghiệm
       </button>
-      <button class="nav-item" data-title="Luyện nói" data-count="convo" onclick="showView('convo',this)">
-        <span id="ic-convo"></span> Luyện nói <span class="count">0</span>
+      <button class="nav-item" data-title="Điền từ" onclick="showQuizType('fill',this)">
+        <span id="ic-quiz-fill"></span> Điền từ
       </button>
-      <button class="nav-item" data-title="Ngữ pháp" data-count="grammar" onclick="showView('grammar',this)">
-        <span id="ic-grammar"></span> Ngữ pháp <span class="count">0</span>
+      <button class="nav-item" data-title="Sắp xếp" onclick="showQuizType('sort',this)">
+        <span id="ic-quiz-sort"></span> Sắp xếp
+      </button>
+      <button class="nav-item" data-title="Nối câu" onclick="showQuizType('match',this)">
+        <span id="ic-quiz-match"></span> Nối câu
+      </button>
+      <button class="nav-item" data-title="Khởi động" onclick="showView('warmup',this)">
+        <span id="ic-warmup"></span> Khởi động
+      </button>
+      <button class="nav-item" data-title="Luyện nói" onclick="showView('convo',this)">
+        <span id="ic-convo"></span> Luyện nói
+      </button>
+      <button class="nav-item" data-title="Ngữ pháp" onclick="showView('grammar',this)">
+        <span id="ic-grammar"></span> Ngữ pháp
       </button>
       <div class="nav-label">Hệ thống</div>
-      <button class="nav-item" data-title="Tài khoản" data-count="" onclick="showView('users',this)">
-        <span id="ic-users"></span> Tài khoản <span class="count">·</span>
+      <button class="nav-item" data-title="Tài khoản" onclick="showView('users',this)">
+        <span id="ic-users"></span> Tài khoản
       </button>
       <div class="nav-label">Dữ liệu</div>
       <button class="nav-item" data-title="Xuất & Nhập" onclick="showView('data',this)">
@@ -78,6 +90,9 @@
       <a href="http://localhost:8000/index.html" target="_blank">↗ Mở web học (local)</a>
     </div>
   </aside>
+
+  <!-- Backdrop mờ khi mở sidebar trên mobile (bấm để đóng) -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
   <!-- MAIN -->
   <div class="main">
@@ -90,8 +105,8 @@
         <select id="topbar-lesson-select" class="topbar-lesson-select" onchange="onLessonSelectChange(this)"></select>
       </label>
       <div class="topbar-user" id="login-info" title="Tài khoản đang đăng nhập"></div>
-      <button class="topbar-btn" onclick="exportData()" title="Tải file data.js để cập nhật web chính"><span id="ic-dl"></span> Xuất data.js</button>
-      <button class="topbar-btn" onclick="handleLogout()" title="Đăng xuất"><span id="ic-logout"></span> Đăng xuất</button>
+      <button class="topbar-btn" onclick="exportData()" title="Tải file data.js để cập nhật web chính"><span id="ic-dl"></span><span class="btn-label"> Xuất data.js</span></button>
+      <button class="topbar-btn" onclick="handleLogout()" title="Đăng xuất"><span id="ic-logout"></span><span class="btn-label"> Đăng xuất</span></button>
     </header>
 
     <main class="content">
@@ -172,7 +187,22 @@
         </div>
       </section>
 
-      <!-- ══ VIEW: DIALOGS ══ -->
+      <!-- ══ VIEW: FLASHCARDS (Thẻ nhớ) ══ -->
+      <section id="view-flashcards" class="view">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Thẻ nhớ (Flashcards)</div>
+            <div class="page-sub" id="flashcards-count">0 thẻ</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openVocabForm()"><span id="ic-plus-fl"></span> Thêm từ làm thẻ</button>
+          </div>
+        </div>
+        <div class="panel" style="background:var(--primary-xl);border-color:var(--primary-l);padding:12px 16px;margin-bottom:16px;font-size:.88rem;color:var(--foreground-2);">
+          ℹ️ Thẻ nhớ được tạo tự động từ <strong>Từ vựng</strong> của bài đang chọn (mặt trước: chữ Hán + phiên âm, mặt sau: nghĩa + ví dụ). Thêm/sửa tại mục "Từ vựng".
+        </div>
+        <div id="flashcards-wrap"></div>
+      </section>
       <section id="view-dialogs" class="view">
         <div class="page-head">
           <div>
@@ -186,26 +216,16 @@
         <div id="dialogs-wrap"></div>
       </section>
 
-      <!-- ══ VIEW: QUIZ ══ -->
+      <!-- ══ VIEW: QUIZ (1 view dùng chung cho 4 loại: mc/fill/sort/match) ══ -->
       <section id="view-quiz" class="view">
         <div class="page-head">
           <div>
-            <div class="page-title">Quản lý bài tập</div>
+            <div class="page-title" id="quiz-page-title">Quản lý bài tập</div>
             <div class="page-sub" id="quiz-count">0 câu</div>
           </div>
-        </div>
-
-        <!-- Sub-tabs -->
-        <div class="toolbar" style="margin-bottom:18px;">
-          <button class="btn quiz-subtab active" onclick="setQuizTab('mc',this)">🎯 Trắc nghiệm</button>
-          <button class="btn quiz-subtab" onclick="setQuizTab('fill',this)">✏️ Điền từ</button>
-          <button class="btn quiz-subtab" onclick="setQuizTab('sort',this)">🧩 Sắp xếp</button>
-          <button class="btn quiz-subtab" onclick="setQuizTab('match',this)">🔗 Nối câu</button>
-          <div class="toolbar-info">Chọn loại bài tập</div>
-        </div>
-
-        <div class="page-actions" style="margin-bottom:16px;" id="quiz-add-btn">
-          <button class="btn btn-primary" onclick="openMcForm()"><span id="ic-plus-q"></span> Thêm câu</button>
+          <div class="page-actions" id="quiz-add-btn">
+            <button class="btn btn-primary" onclick="openMcForm()"><span id="ic-plus-q"></span> Thêm câu</button>
+          </div>
         </div>
 
         <div id="quiz-content"></div>
@@ -789,8 +809,12 @@
   // Inject icons vào các placeholder span (giữ HTML gọn)
   document.getElementById('ic-dash').innerHTML = I.dashboard;
   document.getElementById('ic-vocab').innerHTML = I.book;
+  document.getElementById('ic-flash').innerHTML = I.layers;
   document.getElementById('ic-dlg').innerHTML = I.chat;
-  document.getElementById('ic-quiz').innerHTML = I.quiz;
+  document.getElementById('ic-quiz-mc').innerHTML = I.quiz;
+  document.getElementById('ic-quiz-fill').innerHTML = I.pen;
+  document.getElementById('ic-quiz-sort').innerHTML = I.shuffle;
+  document.getElementById('ic-quiz-match').innerHTML = I.link;
   document.getElementById('ic-data').innerHTML = I.download;
   document.getElementById('ic-menu').innerHTML = I.menu;
   document.getElementById('ic-dl').innerHTML = I.download;
@@ -816,6 +840,7 @@
   document.getElementById('ic-lessons').innerHTML = I.book;
   // Plus buttons mới
   document.getElementById('ic-plus-wu').innerHTML = I.plus;
+  document.getElementById('ic-plus-fl').innerHTML = I.plus;
   document.getElementById('ic-plus-co').innerHTML = I.plus;
   document.getElementById('ic-plus-gr').innerHTML = I.plus;
   document.getElementById('ic-plus-cp').innerHTML = I.plus;
