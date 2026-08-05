@@ -1309,6 +1309,180 @@ function getExamples(v){
   return [];
 }
 
+/* ════════════════════════════════════════════
+   AI GENERATE LESSON (Gemini)
+   Admin dán bài gốc/chủ đề → backend gọi Gemini
+   → sinh ra 9 phần (vocab, dialogs, grammar...) → preview → lưu.
+   ════════════════════════════════════════════ */
+let aiLessonData = null; // cache kết quả trả về từ Gemini
+
+function openAiModal() {
+  resetAiModal();
+  openModal('ai-modal');
+}
+function resetAiModal() {
+  document.getElementById('ai-input-step').style.display = '';
+  document.getElementById('ai-preview-step').style.display = 'none';
+  document.getElementById('ai-preview').innerHTML = '';
+  aiLessonData = null;
+}
+
+async function callAiGenerate() {
+  const btn = document.getElementById('ai-gen-btn');
+  const sourceText = document.getElementById('ai-source').value.trim();
+  const topic = document.getElementById('ai-topic').value.trim();
+  const level = document.getElementById('ai-level').value;
+  if (!sourceText && !topic) {
+    toast('Thiếu input', 'Nhập chủ đề hoặc dán bài gốc để AI sinh.', 'error');
+    return;
+  }
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Đang sinh... (10-60s)';
+  try {
+    const r = await api('/api/admin/generate-lesson', {
+      method: 'POST',
+      body: JSON.stringify({ sourceText, topic, level }),
+    });
+    aiLessonData = r;
+    renderAiPreview(r);
+    document.getElementById('ai-input-step').style.display = 'none';
+    document.getElementById('ai-preview-step').style.display = '';
+  } catch (e) {
+    toast('Sinh thất bại', e.message || 'Lỗi không xác định', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+// Render preview đầy đủ — admin xem trước khi lưu.
+function renderAiPreview(d) {
+  const lesson = d.lesson || {};
+  const cnt = k => (Array.isArray(d[k]) ? d[k].length : 0);
+  // Đếm tổng số mục sẽ thêm
+  const total = ['vocab','warmup','dialogs','fill','sort','match','mc','convo','grammar']
+    .reduce((s, k) => s + cnt(k), 0);
+
+  const html = `
+    <div style="margin-bottom:16px;padding:12px 16px;background:linear-gradient(135deg,#f0f7ff,#faf5ff);border-radius:10px;border-left:4px solid #6366f1;">
+      <div style="font-size:1.5rem;font-family:'Noto Serif SC',serif;">${escapeHtml(lesson.zh || '(không tên)')}</div>
+      <div style="color:#6b7280;">${escapeHtml(lesson.py || '')}</div>
+      <div style="color:#374151;margin-top:4px;">${escapeHtml(lesson.vn || '')}</div>
+      ${Array.isArray(lesson.chips) && lesson.chips.length ? `<div style="margin-top:8px;">${lesson.chips.map(c => `<span class="tag tag-blue" style="margin-right:6px;">${escapeHtml(c.text||'')}</span>`).join('')}</div>` : ''}
+      <div style="margin-top:8px;font-size:0.9rem;color:#6366f1;font-weight:600;">Tổng: ${total} mục sẽ thêm vào bài hiện tại</div>
+    </div>
+
+    ${renderAiSection('📖 Vocab (' + cnt('vocab') + ')', (d.vocab||[]).map(v =>
+      `<div style="padding:6px 0;border-bottom:1px dashed #eee;">
+        <span style="font-family:'Noto Serif SC',serif;font-size:1.1rem;">${escapeHtml(v.zh||'')}</span>
+        <span style="color:#3b82f6;">${escapeHtml(v.py||'')}</span>
+        <span class="tag" style="margin:0 4px;">${escapeHtml(v.pos||'')}</span>
+        <span style="color:#6b7280;">— ${escapeHtml(v.vn||'')}</span>
+        ${v.ex_zh ? `<div style="font-size:0.85rem;color:#6b7280;margin-left:12px;">vd: ${escapeHtml(v.ex_zh)} — ${escapeHtml(v.ex_vn||'')}</div>` : ''}
+      </div>`).join(''), true)}
+
+    ${renderAiSection('💬 Dialogs (' + cnt('dialogs') + ')', (d.dialogs||[]).map(dl =>
+      `<div style="padding:8px 0;border-bottom:1px dashed #eee;">
+        <div style="font-weight:600;color:#374151;">${escapeHtml(dl.scene||'')}</div>
+        ${(dl.lines||[]).map(l => `<div style="margin:2px 0;font-size:0.92rem;"><span class="tag" style="margin-right:4px;">${escapeHtml((dl.chars||[])[l.sp]||'?')}</span><span style="font-family:'Noto Serif SC',serif;">${escapeHtml(l.zh||'')}</span> <span style="color:#6b7280;">(${escapeHtml(l.vn||'')})</span></div>`).join('')}
+      </div>`).join(''))}
+
+    ${renderAiSection('📐 Grammar (' + cnt('grammar') + ')', (d.grammar||[]).map(g =>
+      `<div style="padding:8px 0;border-bottom:1px dashed #eee;">
+        <div style="font-weight:600;">${escapeHtml(g.title||'')} ${g.titleZh ? `<span style="font-family:'Noto Serif SC',serif;color:#3b82f6;">${escapeHtml(g.titleZh)}</span>` : ''}</div>
+        <div style="color:#6b7280;font-size:0.9rem;">${escapeHtml(g.sub||'')}</div>
+        ${(g.rules||[]).length ? `<div style="margin-top:4px;font-size:0.88rem;">${g.rules.map(r => `<div>• <b>${escapeHtml(r.label||'')}</b>: ${escapeHtml(r.text||'')}</div>`).join('')}</div>` : ''}
+        ${g.note ? `<div style="margin-top:4px;font-size:0.85rem;color:#92400e;">💡 ${escapeHtml(g.note)}</div>` : ''}
+      </div>`).join(''))}
+
+    ${renderAiSection('✏️ Điền từ (' + cnt('fill') + ')', (d.fill||[]).map(f =>
+      `<div style="font-size:0.9rem;padding:4px 0;">${escapeHtml(f.pre||'')}<b style="color:#dc2626;">[${escapeHtml(f.ans||'')}]</b>${escapeHtml(f.post||'')} <span style="color:#6b7280;">— ${escapeHtml(f.exp||'')}</span></div>`).join(''))}
+
+    ${renderAiSection('🔀 Sắp xếp (' + cnt('sort') + ')', (d.sort||[]).map(s =>
+      `<div style="font-size:0.9rem;padding:4px 0;"><span style="color:#6b7280;">[${escapeHtml((s.words||[]).join(' | '))}]</span> → <b style="font-family:'Noto Serif SC',serif;">${escapeHtml(s.ans||'')}</b> <span style="color:#6b7280;">(${escapeHtml(s.vn||'')})</span></div>`).join(''))}
+
+    ${renderAiSection('🔗 Nối câu (' + cnt('match') + ')', (d.match||[]).map(m =>
+      `<div style="font-size:0.9rem;padding:4px 0;">${escapeHtml(m.left||'')} → <b>${escapeHtml(m.right||'')}</b></div>`).join(''))}
+
+    ${renderAiSection('❓ Trắc nghiệm (' + cnt('mc') + ')', (d.mc||[]).map(q =>
+      `<div style="font-size:0.9rem;padding:4px 0;">${escapeHtml(q.q||'')} <span style="color:#6b7280;">[${(q.opts||[]).map((o,i)=>(i===q.ans?'✓':'')+' '+escapeHtml(o)).join(' | ')}]</span></div>`).join(''))}
+
+    ${renderAiSection('🔥 Khởi động (' + cnt('warmup') + ')', (d.warmup||[]).map(w =>
+      `<span class="tag" style="margin:2px;">${escapeHtml(w.img||'')} ${escapeHtml(w.label||'')}</span>`).join(''))}
+
+    ${renderAiSection('🗣️ Luyện nói (' + cnt('convo') + ')', (d.convo||[]).map(c =>
+      `<div style="padding:6px 0;border-bottom:1px dashed #eee;"><b>${escapeHtml(c.title||'')}</b>${(c.pairs||[]).map(p => `<div style="font-size:0.88rem;margin:2px 0;"><span style="font-family:'Noto Serif SC',serif;">${escapeHtml(p.q||'')}</span> → <span style="font-family:'Noto Serif SC',serif;">${escapeHtml(p.a||'')}</span></div>`).join('')}</div>`).join(''))}
+  `;
+  document.getElementById('ai-preview').innerHTML = html;
+}
+
+// Helper render 1 section dạng <details>
+function renderAiSection(title, body, open) {
+  if (!body) return '';
+  return `<details ${open ? 'open' : ''} style="margin-bottom:12px;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;">
+    <summary style="cursor:pointer;font-weight:600;color:#374151;">${title}</summary>
+    <div style="margin-top:8px;">${body}</div>
+  </details>`;
+}
+
+// Lưu: luôn TẠO BÀI MỚI từ metadata Gemini đề xuất, rồi đổ 9 phần nội dung vào.
+async function saveAiLesson() {
+  if (!aiLessonData) return;
+  const saveBtn = event && event.currentTarget;
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.dataset.orig = saveBtn.textContent; saveBtn.textContent = '⏳ Đang lưu...'; }
+
+  try {
+    // 1) Tạo lesson mới từ metadata Gemini đề xuất (zh/py/vn/chips).
+    //    Store.addLesson tự tăng num + POST /api/lessons.
+    let lessonMeta = aiLessonData.lesson || {};
+    // Bảo vệ: đảm bảo có tên zh (nếu AI thiếu thì dùng placeholder)
+    if (!lessonMeta.zh) lessonMeta.zh = '(Bài AI)';
+    // Chips phải là mảng object {icon,text} — dọn nếu sai
+    if (!Array.isArray(lessonMeta.chips)) lessonMeta.chips = [];
+
+    const created = await Store.addLesson(lessonMeta);
+    if (!created || !created.id) {
+      toast('Lỗi', 'Không tạo được bài học mới. Kiểm tra kết nối API.', 'error');
+      return;
+    }
+    const lessonId = created.id;
+    Store.setCurrentLesson(lessonId);
+    if (typeof refreshLessonSelector === 'function') refreshLessonSelector();
+    if (typeof renderLessons === 'function') renderLessons();
+
+    // 2) Đổ 9 phần nội dung vào lesson vừa tạo.
+    const collections = ['vocab','warmup','dialogs','fill','sort','match','mc','convo','grammar'];
+    let total = 0;
+    for (const k of collections) {
+      const arr = Array.isArray(aiLessonData[k]) ? aiLessonData[k] : [];
+      for (const item of arr) {
+        try {
+          Store.add(k, Object.assign({}, item, { lessonId }));
+          total++;
+        } catch (e) {
+          console.warn('[saveAiLesson] add fail', k, e);
+        }
+      }
+    }
+
+    closeModal('ai-modal');
+    toast('Đã lưu', `Đã tạo bài "${created.zh||''}" và thêm ${total} mục nội dung.`, 'success');
+
+    // 3) Refresh các view chính.
+    ['Vocab','Dialogs','Warmup','Convo','Grammar'].forEach(fn => {
+      if (typeof window['render' + fn] === 'function') window['render' + fn]();
+    });
+    if (typeof renderQuiz === 'function') renderQuiz();
+  } catch (e) {
+    console.error('[saveAiLesson] error:', e);
+    toast('Lưu thất bại', (e && e.message) || 'Lỗi không xác định', 'error');
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = saveBtn.dataset.orig || '💾 Lưu tất cả'; }
+  }
+}
+
+
 /* ─── Import / Export / Reset ─── */
 async function exportData() {
   // Nếu online: tải trực tiếp data.js từ server (luôn mới nhất)
