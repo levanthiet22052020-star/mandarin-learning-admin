@@ -387,16 +387,9 @@
           <input class="input" name="em" placeholder="❄️" maxlength="4">
         </div>
         <div class="form-field full">
-          <label>Ví dụ — Tiếng Trung</label>
-          <input class="input" name="ex_zh" placeholder="昨天下雪了。">
-        </div>
-        <div class="form-field full">
-          <label>Ví dụ — Phiên âm</label>
-          <input class="input" name="ex_py" placeholder="Zuótiān xià xuě le.">
-        </div>
-        <div class="form-field full">
-          <label>Ví dụ — Tiếng Việt</label>
-          <input class="input" name="ex_vn" placeholder="Hôm qua tuyết rơi rồi.">
+          <label>Ví dụ <span class="hint">(có thể thêm nhiều — khuyến nghị 2–5)</span></label>
+          <div id="vocab-examples-list"></div>
+          <button type="button" class="btn btn-sm btn-ghost" id="vocab-add-example" onclick="addExampleRow()" style="margin-top:8px;">+ Thêm ví dụ</button>
         </div>
       </div>
       <div class="form-actions">

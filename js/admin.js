@@ -155,7 +155,7 @@ function renderVocab() {
     if (vocabFilter.pos && v.pos !== vocabFilter.pos) return false;
     if (vocabFilter.q) {
       const q = vocabFilter.q.toLowerCase();
-      return (v.zh + v.py + v.vn + v.ex_zh + v.ex_vn).toLowerCase().includes(q);
+      return (v.zh + v.py + v.vn + getExamples(v).map(e => e.zh + e.vn).join(' ')).toLowerCase().includes(q);
     }
     return true;
   });
@@ -181,7 +181,7 @@ function renderVocab() {
 }
 
 function openVocabForm(n) {
-  const v = n ? Store.get('vocab', n) : { n: null, zh: '', py: '', pos: 'Danh từ', vn: '', em: '', lesson: 1, ex_zh: '', ex_py: '', ex_vn: '' };
+  const v = n ? Store.get('vocab', n) : { n: null, zh: '', py: '', pos: 'Danh từ', vn: '', em: '', lesson: 1 };
   const form = document.getElementById('vocab-form');
   form.n.value = v.n || '';
   form.zh.value = v.zh || '';
@@ -190,16 +190,82 @@ function openVocabForm(n) {
   form.vn.value = v.vn || '';
   form.em.value = v.em || '';
   form.lesson.value = v.lesson || 1;
-  form.ex_zh.value = v.ex_zh || '';
-  form.ex_py.value = v.ex_py || '';
-  form.ex_vn.value = v.ex_vn || '';
+  renderExampleRows(getExamples(v));
   document.getElementById('vocab-modal-title').textContent = v.n ? 'Sửa từ vựng #' + v.n : 'Thêm từ vựng mới';
   openModal('vocab-modal');
+}
+
+// Render danh sách row ví dụ trong form vocab. list = [{zh,py,vn}]
+function renderExampleRows(list) {
+  const wrap = document.getElementById('vocab-examples-list');
+  if (!wrap) return;
+  const rows = (list && list.length) ? list : [{ zh: '', py: '', vn: '' }];
+  wrap.innerHTML = rows.map((e, i) => `
+    <div class="ex-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;">
+      <div class="form-field" style="margin:0;">
+        <label>Ví dụ ${i + 1} — Trung</label>
+        <input class="input" name="ex-zh" placeholder="今天天气怎么样？" value="${escapeAttr(e.zh || '')}">
+      </div>
+      <div class="form-field" style="margin:0;">
+        <label>Phiên âm</label>
+        <input class="input" name="ex-py" placeholder="Jīntiān tiānqì zěnmeyàng?" value="${escapeAttr(e.py || '')}">
+      </div>
+      <div class="form-field" style="margin:0;">
+        <label>Tiếng Việt</label>
+        <input class="input" name="ex-vn" placeholder="Hôm nay thời tiết thế nào?" value="${escapeAttr(e.vn || '')}">
+      </div>
+      <button type="button" class="btn btn-sm btn-ghost" title="Xóa ví dụ này" onclick="removeExampleRow(this)" style="height:38px;">${I.trash}</button>
+    </div>`).join('');
+}
+
+function addExampleRow() {
+  const wrap = document.getElementById('vocab-examples-list');
+  if (!wrap) return;
+  const idx = wrap.querySelectorAll('.ex-row').length;
+  const div = document.createElement('div');
+  div.className = 'ex-row';
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;';
+  div.innerHTML = `
+    <div class="form-field" style="margin:0;">
+      <label>Ví dụ ${idx + 1} — Trung</label>
+      <input class="input" name="ex-zh" placeholder="今天天气怎么样？">
+    </div>
+    <div class="form-field" style="margin:0;">
+      <label>Phiên âm</label>
+      <input class="input" name="ex-py" placeholder="Jīntiān tiānqì zěnmeyàng?">
+    </div>
+    <div class="form-field" style="margin:0;">
+      <label>Tiếng Việt</label>
+      <input class="input" name="ex-vn" placeholder="Hôm nay thời tiết thế nào?">
+    </div>
+    <button type="button" class="btn btn-sm btn-ghost" title="Xóa ví dụ này" onclick="removeExampleRow(this)" style="height:38px;">${I.trash}</button>`;
+  wrap.appendChild(div);
+}
+
+function removeExampleRow(btn) {
+  const row = btn.closest('.ex-row');
+  if (!row) return;
+  const wrap = document.getElementById('vocab-examples-list');
+  row.remove();
+  // Nếu xóa hết rồi thì giữ 1 row trống (tránh form không có ô nhập)
+  if (wrap && !wrap.querySelectorAll('.ex-row').length) renderExampleRows([]);
+  // Cập nhật lại label số thứ tự
+  if (wrap) wrap.querySelectorAll('.ex-row').forEach((r, i) => {
+    const lbl = r.querySelector('label');
+    if (lbl) lbl.textContent = `Ví dụ ${i + 1} — Trung`;
+  });
 }
 
 function submitVocabForm(e) {
   e.preventDefault();
   const f = e.target;
+  // Thu thập examples từ các row động
+  const exRows = (document.getElementById('vocab-examples-list') || {}).querySelectorAll?.('.ex-row') || [];
+  const examples = Array.from(exRows).map(r => ({
+    zh: (r.querySelector('[name=ex-zh]') || {}).value?.trim() || '',
+    py: (r.querySelector('[name=ex-py]') || {}).value?.trim() || '',
+    vn: (r.querySelector('[name=ex-vn]') || {}).value?.trim() || '',
+  })).filter(e => e.zh || e.py || e.vn);
   const item = {
     zh: f.zh.value.trim(),
     py: f.py.value.trim(),
@@ -207,9 +273,11 @@ function submitVocabForm(e) {
     vn: f.vn.value.trim(),
     em: f.em.value.trim(),
     lesson: Number(f.lesson.value),
-    ex_zh: f.ex_zh.value.trim(),
-    ex_py: f.ex_py.value.trim(),
-    ex_vn: f.ex_vn.value.trim(),
+    examples,
+    // Đồng bộ ex_* cũ (lấy item đầu) cho backward-compat với code cũ
+    ex_zh: examples.length ? examples[0].zh : '',
+    ex_py: examples.length ? examples[0].py : '',
+    ex_vn: examples.length ? examples[0].vn : '',
   };
   if (!item.zh || !item.py || !item.vn) {
     toast('Thiếu thông tin', 'Vui lòng nhập chữ Hán, phiên âm và nghĩa.', 'error');
@@ -273,7 +341,7 @@ function renderFlashcards() {
       </div>
       <div class="flash-back">
         <div class="flash-vn">${escapeHtml(v.vn || '')}</div>
-        ${(v.ex_zh || v.ex_vn) ? `<div class="flash-ex">${escapeHtml(v.ex_zh || '')}${v.ex_vn ? ' — ' + escapeHtml(v.ex_vn) : ''}</div>` : ''}
+        ${(() => { const exs = getExamples(v); return exs.length ? `<div class="flash-ex">${exs.map(e => escapeHtml(e.zh || '') + (e.vn ? ' — ' + escapeHtml(e.vn) : '')).join('<br>')}</div>` : ''; })()}
       </div>
       <div class="flash-actions">
         <button class="row-btn" title="Sửa từ này" onclick="openVocabForm(${v.n})">${I.edit}</button>
@@ -1233,6 +1301,13 @@ async function deleteLesson(id, label) {
 /* ─── Helpers ─── */
 function escapeHtml(s) { return String(s || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
 function escapeAttr(s) { return String(s || '').replace(/["']/g, c => ({ '"': '&quot;', "'": '&#39;' }[c])); }
+// Lấy danh sách ví dụ của 1 vocab. Ưu tiên examples[], fallback gom ex_* cũ.
+function getExamples(v){
+  if(!v) return [];
+  if(Array.isArray(v.examples) && v.examples.length) return v.examples;
+  if(v.ex_zh || v.ex_py || v.ex_vn) return [{ zh: v.ex_zh || '', py: v.ex_py || '', vn: v.ex_vn || '' }];
+  return [];
+}
 
 /* ─── Import / Export / Reset ─── */
 async function exportData() {
