@@ -28,6 +28,24 @@ const I = {
   empty: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
   logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
   users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  // ─── AI feature icons ───
+  sparkles: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M19 17v4"/><path d="M17 19h4"/></svg>',
+  rocket: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>',
+  save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>',
+  undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  paperclip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>',
+  file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>',
+  // Section icons (renderAiPreview)
+  secVocab: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+  secDialog: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  secGrammar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>',
+  secFill: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>',
+  secSort: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>',
+  secMatch: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+  secQuiz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  secWarmup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+  secConvo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
 };
 
 /* ─── Toast ─── */
@@ -1325,25 +1343,75 @@ function resetAiModal() {
   document.getElementById('ai-preview-step').style.display = 'none';
   document.getElementById('ai-preview').innerHTML = '';
   aiLessonData = null;
+  // Clear file upload + text paste khi mở lại modal
+  const fileInput = document.getElementById('ai-file');
+  if (fileInput) fileInput.value = '';
+  if (typeof clearAiFile === 'function') clearAiFile();
+  const src = document.getElementById('ai-source');
+  if (src) src.value = '';
+  const topic = document.getElementById('ai-topic');
+  if (topic) topic.value = '';
+}
+
+// Hiển thị tên file khi chọn — để admin biết file nào đang được upload.
+function onAiFileChange(input) {
+  const info = document.getElementById('ai-file-info');
+  const clearBtn = document.getElementById('ai-file-clear');
+  if (input && input.files && input.files[0]) {
+    const f = input.files[0];
+    const sizeKb = (f.size / 1024).toFixed(1);
+    const sizeText = f.size > 1024 * 1024 ? (f.size / 1024 / 1024).toFixed(2) + ' MB' : sizeKb + ' KB';
+    // Dùng innerHTML để chèn SVG + escape filename (tránh XSS)
+    if (info) info.innerHTML = I.paperclip + ' ' + escapeHtml(f.name) + ' <span style="color:var(--soft)">(' + escapeHtml(sizeText) + ')</span>';
+    if (clearBtn) clearBtn.style.display = '';
+  } else {
+    if (info) info.innerHTML = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+  }
+}
+function clearAiFile() {
+  const inp = document.getElementById('ai-file');
+  if (inp) inp.value = '';
+  onAiFileChange(inp);
 }
 
 async function callAiGenerate() {
   const btn = document.getElementById('ai-gen-btn');
+  const fileInput = document.getElementById('ai-file');
+  const file = fileInput && fileInput.files[0];
   const sourceText = document.getElementById('ai-source').value.trim();
   const topic = document.getElementById('ai-topic').value.trim();
   const level = document.getElementById('ai-level').value;
-  if (!sourceText && !topic) {
-    toast('Thiếu input', 'Nhập chủ đề hoặc dán bài gốc để AI sinh.', 'error');
+  // Validate: cần ít nhất 1 trong 3 nguồn — file, text paste, hoặc topic (sáng tạo)
+  if (!file && !sourceText && !topic) {
+    toast('Thiếu input', 'Upload file, dán bài gốc, hoặc nhập chủ đề để AI sinh.', 'error');
+    return;
+  }
+  // Validate cơ bản file: max 10MB (backend cũng check, nhưng check sớm cho mượt)
+  if (file && file.size > 10 * 1024 * 1024) {
+    toast('File quá lớn', 'Tối đa 10MB. Hãy cắt bớt hoặc nén file.', 'error');
     return;
   }
   btn.disabled = true;
-  const orig = btn.textContent;
-  btn.textContent = '⏳ Đang sinh... (10-60s)';
+  // Lưu lại nội dung nút (gồm SVG icon) để restore sau, rồi đổi sang trạng thái loading.
+  const origHTML = btn.innerHTML;
+  btn.innerHTML = I.clock + (file ? ' Đang đọc file + sinh... (15-90s)' : ' Đang sinh... (10-60s)');
   try {
-    const r = await api('/api/admin/generate-lesson', {
-      method: 'POST',
-      body: JSON.stringify({ sourceText, topic, level }),
-    });
+    let r;
+    if (file) {
+      // Nhánh upload: gửi multipart/form-data qua route upload
+      const fd = new FormData();
+      fd.append('file', file);
+      if (topic) fd.append('topic', topic);
+      if (level) fd.append('level', level);
+      r = await api('/api/admin/generate-lesson-upload', { method: 'POST', body: fd });
+    } else {
+      // Nhánh text paste: gửi JSON qua route cũ
+      r = await api('/api/admin/generate-lesson', {
+        method: 'POST',
+        body: JSON.stringify({ sourceText, topic, level }),
+      });
+    }
     aiLessonData = r;
     renderAiPreview(r);
     document.getElementById('ai-input-step').style.display = 'none';
@@ -1352,7 +1420,7 @@ async function callAiGenerate() {
     toast('Sinh thất bại', e.message || 'Lỗi không xác định', 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = orig;
+    btn.innerHTML = origHTML;
   }
 }
 
@@ -1370,10 +1438,10 @@ function renderAiPreview(d) {
       <div style="color:#6b7280;">${escapeHtml(lesson.py || '')}</div>
       <div style="color:#374151;margin-top:4px;">${escapeHtml(lesson.vn || '')}</div>
       ${Array.isArray(lesson.chips) && lesson.chips.length ? `<div style="margin-top:8px;">${lesson.chips.map(c => `<span class="tag tag-blue" style="margin-right:6px;">${escapeHtml(c.text||'')}</span>`).join('')}</div>` : ''}
-      <div style="margin-top:8px;font-size:0.9rem;color:#6366f1;font-weight:600;">Tổng: ${total} mục sẽ thêm vào bài hiện tại</div>
+      <div style="margin-top:8px;font-size:0.9rem;color:#6366f1;font-weight:600;">Tổng: ${total} mục — sẽ tạo bài MỚI khi bấm Lưu</div>
     </div>
 
-    ${renderAiSection('📖 Vocab (' + cnt('vocab') + ')', (d.vocab||[]).map(v =>
+    ${renderAiSection(I.secVocab + ' Vocab (' + cnt('vocab') + ')', (d.vocab||[]).map(v =>
       `<div style="padding:6px 0;border-bottom:1px dashed #eee;">
         <span style="font-family:'Noto Serif SC',serif;font-size:1.1rem;">${escapeHtml(v.zh||'')}</span>
         <span style="color:#3b82f6;">${escapeHtml(v.py||'')}</span>
@@ -1382,36 +1450,36 @@ function renderAiPreview(d) {
         ${v.ex_zh ? `<div style="font-size:0.85rem;color:#6b7280;margin-left:12px;">vd: ${escapeHtml(v.ex_zh)} — ${escapeHtml(v.ex_vn||'')}</div>` : ''}
       </div>`).join(''), true)}
 
-    ${renderAiSection('💬 Dialogs (' + cnt('dialogs') + ')', (d.dialogs||[]).map(dl =>
+    ${renderAiSection(I.secDialog + ' Dialogs (' + cnt('dialogs') + ')', (d.dialogs||[]).map(dl =>
       `<div style="padding:8px 0;border-bottom:1px dashed #eee;">
         <div style="font-weight:600;color:#374151;">${escapeHtml(dl.scene||'')}</div>
         ${(dl.lines||[]).map(l => `<div style="margin:2px 0;font-size:0.92rem;"><span class="tag" style="margin-right:4px;">${escapeHtml((dl.chars||[])[l.sp]||'?')}</span><span style="font-family:'Noto Serif SC',serif;">${escapeHtml(l.zh||'')}</span> <span style="color:#6b7280;">(${escapeHtml(l.vn||'')})</span></div>`).join('')}
       </div>`).join(''))}
 
-    ${renderAiSection('📐 Grammar (' + cnt('grammar') + ')', (d.grammar||[]).map(g =>
+    ${renderAiSection(I.secGrammar + ' Grammar (' + cnt('grammar') + ')', (d.grammar||[]).map(g =>
       `<div style="padding:8px 0;border-bottom:1px dashed #eee;">
         <div style="font-weight:600;">${escapeHtml(g.title||'')} ${g.titleZh ? `<span style="font-family:'Noto Serif SC',serif;color:#3b82f6;">${escapeHtml(g.titleZh)}</span>` : ''}</div>
         <div style="color:#6b7280;font-size:0.9rem;">${escapeHtml(g.sub||'')}</div>
         ${(g.rules||[]).length ? `<div style="margin-top:4px;font-size:0.88rem;">${g.rules.map(r => `<div>• <b>${escapeHtml(r.label||'')}</b>: ${escapeHtml(r.text||'')}</div>`).join('')}</div>` : ''}
-        ${g.note ? `<div style="margin-top:4px;font-size:0.85rem;color:#92400e;">💡 ${escapeHtml(g.note)}</div>` : ''}
+        ${g.note ? `<div style="margin-top:4px;font-size:0.85rem;color:#92400e;">${I.info} ${escapeHtml(g.note)}</div>` : ''}
       </div>`).join(''))}
 
-    ${renderAiSection('✏️ Điền từ (' + cnt('fill') + ')', (d.fill||[]).map(f =>
+    ${renderAiSection(I.secFill + ' Điền từ (' + cnt('fill') + ')', (d.fill||[]).map(f =>
       `<div style="font-size:0.9rem;padding:4px 0;">${escapeHtml(f.pre||'')}<b style="color:#dc2626;">[${escapeHtml(f.ans||'')}]</b>${escapeHtml(f.post||'')} <span style="color:#6b7280;">— ${escapeHtml(f.exp||'')}</span></div>`).join(''))}
 
-    ${renderAiSection('🔀 Sắp xếp (' + cnt('sort') + ')', (d.sort||[]).map(s =>
+    ${renderAiSection(I.secSort + ' Sắp xếp (' + cnt('sort') + ')', (d.sort||[]).map(s =>
       `<div style="font-size:0.9rem;padding:4px 0;"><span style="color:#6b7280;">[${escapeHtml((s.words||[]).join(' | '))}]</span> → <b style="font-family:'Noto Serif SC',serif;">${escapeHtml(s.ans||'')}</b> <span style="color:#6b7280;">(${escapeHtml(s.vn||'')})</span></div>`).join(''))}
 
-    ${renderAiSection('🔗 Nối câu (' + cnt('match') + ')', (d.match||[]).map(m =>
+    ${renderAiSection(I.secMatch + ' Nối câu (' + cnt('match') + ')', (d.match||[]).map(m =>
       `<div style="font-size:0.9rem;padding:4px 0;">${escapeHtml(m.left||'')} → <b>${escapeHtml(m.right||'')}</b></div>`).join(''))}
 
-    ${renderAiSection('❓ Trắc nghiệm (' + cnt('mc') + ')', (d.mc||[]).map(q =>
+    ${renderAiSection(I.secQuiz + ' Trắc nghiệm (' + cnt('mc') + ')', (d.mc||[]).map(q =>
       `<div style="font-size:0.9rem;padding:4px 0;">${escapeHtml(q.q||'')} <span style="color:#6b7280;">[${(q.opts||[]).map((o,i)=>(i===q.ans?'✓':'')+' '+escapeHtml(o)).join(' | ')}]</span></div>`).join(''))}
 
-    ${renderAiSection('🔥 Khởi động (' + cnt('warmup') + ')', (d.warmup||[]).map(w =>
+    ${renderAiSection(I.secWarmup + ' Khởi động (' + cnt('warmup') + ')', (d.warmup||[]).map(w =>
       `<span class="tag" style="margin:2px;">${escapeHtml(w.img||'')} ${escapeHtml(w.label||'')}</span>`).join(''))}
 
-    ${renderAiSection('🗣️ Luyện nói (' + cnt('convo') + ')', (d.convo||[]).map(c =>
+    ${renderAiSection(I.secConvo + ' Luyện nói (' + cnt('convo') + ')', (d.convo||[]).map(c =>
       `<div style="padding:6px 0;border-bottom:1px dashed #eee;"><b>${escapeHtml(c.title||'')}</b>${(c.pairs||[]).map(p => `<div style="font-size:0.88rem;margin:2px 0;"><span style="font-family:'Noto Serif SC',serif;">${escapeHtml(p.q||'')}</span> → <span style="font-family:'Noto Serif SC',serif;">${escapeHtml(p.a||'')}</span></div>`).join('')}</div>`).join(''))}
   `;
   document.getElementById('ai-preview').innerHTML = html;
@@ -1420,17 +1488,17 @@ function renderAiPreview(d) {
 // Helper render 1 section dạng <details>
 function renderAiSection(title, body, open) {
   if (!body) return '';
-  return `<details ${open ? 'open' : ''} style="margin-bottom:12px;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;">
-    <summary style="cursor:pointer;font-weight:600;color:#374151;">${title}</summary>
-    <div style="margin-top:8px;">${body}</div>
+  return `<details ${open ? 'open' : ''}>
+    <summary>${title}</summary>
+    <div>${body}</div>
   </details>`;
 }
 
 // Lưu: luôn TẠO BÀI MỚI từ metadata Gemini đề xuất, rồi đổ 9 phần nội dung vào.
 async function saveAiLesson() {
   if (!aiLessonData) return;
-  const saveBtn = event && event.currentTarget;
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.dataset.orig = saveBtn.textContent; saveBtn.textContent = '⏳ Đang lưu...'; }
+  const saveBtn = document.getElementById('ai-save-btn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.dataset.orig = saveBtn.innerHTML; saveBtn.innerHTML = I.clock + ' Đang lưu...'; }
 
   try {
     // 1) Tạo lesson mới từ metadata Gemini đề xuất (zh/py/vn/chips).
@@ -1478,7 +1546,7 @@ async function saveAiLesson() {
     console.error('[saveAiLesson] error:', e);
     toast('Lưu thất bại', (e && e.message) || 'Lỗi không xác định', 'error');
   } finally {
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = saveBtn.dataset.orig || '💾 Lưu tất cả'; }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = saveBtn.dataset.orig || (I.save + ' Lưu tất cả'); }
   }
 }
 

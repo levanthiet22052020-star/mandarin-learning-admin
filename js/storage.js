@@ -26,10 +26,13 @@ function getAuthToken() { return localStorage.getItem('admin_token') || ''; }
 /** Fetch helper với xử lý lỗi + tự đính kèm Authorization header */
 async function api(path, opts = {}) {
   const url = API_BASE + path;
-  // Merge headers: mặc định Content-Type, thêm Authorization nếu có token
+  // Merge headers: mặc định Content-Type, thêm Authorization nếu có token.
+  // CHÚ Ý: nếu body là FormData (upload file) → KHÔNG set Content-Type cứng,
+  // để browser tự thêm boundary đúng cho multipart/form-data.
   const token = getAuthToken();
+  const isFormData = typeof FormData !== 'undefined' && opts.body instanceof FormData;
   const headers = Object.assign(
-    { 'Content-Type': 'application/json' },
+    isFormData ? {} : { 'Content-Type': 'application/json' },
     token ? { Authorization: 'Bearer ' + token } : {},
     opts.headers || {}
   );

@@ -271,6 +271,32 @@ table.data-table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:
 .modal-body{padding:22px 24px;max-height:calc(100vh - 200px);overflow-y:auto;}
 .modal-foot{display:flex;gap:10px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border);background:var(--bg);border-radius:0 0 var(--r-xl) var(--r-xl);}
 
+/* ── AI MODAL (upload file + preview sections) ── */
+.modal-title svg{width:20px;height:20px;color:var(--primary);}
+/* Icon nhỏ trong label field */
+.form-field label .lbl-ic{display:inline-flex;vertical-align:middle;width:15px;height:15px;color:var(--primary);margin-right:2px;}
+.form-field label .lbl-ic svg{width:15px;height:15px;}
+/* Hàng chứa file input + nút clear */
+.ai-file-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.ai-file-input{flex:1;min-width:220px;font-size:.85rem;padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--foreground);cursor:pointer;}
+.ai-file-input::-webkit-file-upload-button{background:var(--primary);color:#fff;border:none;padding:6px 12px;border-radius:var(--r-xs);font-size:.8rem;font-weight:600;cursor:pointer;margin-right:10px;}
+.ai-file-input::-webkit-file-upload-button:hover{background:var(--primary-d);}
+.ai-file-input::file-selector-button{background:var(--primary);color:#fff;border:none;padding:6px 12px;border-radius:var(--r-xs);font-size:.8rem;font-weight:600;cursor:pointer;margin-right:10px;}
+.ai-file-input::file-selector-button:hover{background:var(--primary-d);}
+/* File info (tên + dung lượng sau khi chọn) */
+.ai-file-info{display:flex;align-items:center;gap:5px;margin-top:6px;}
+.ai-file-info svg{width:14px;height:14px;color:var(--primary);flex-shrink:0;}
+/* Dấu phân cách giữa upload và paste text */
+.ai-or{text-align:center;color:var(--muted);font-size:.78rem;font-weight:600;letter-spacing:.05em;margin:10px 0;position:relative;}
+.ai-or::before,.ai-or::after{content:"";display:inline-block;width:30px;height:1px;background:var(--border);vertical-align:middle;margin:0 10px;}
+/* Preview sections (<details>) trong bước 2 */
+#ai-preview details{margin-bottom:12px;border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;background:var(--surface);}
+#ai-preview details[open]{background:var(--bg);}
+#ai-preview summary{cursor:pointer;font-weight:600;color:var(--foreground-2);display:flex;align-items:center;gap:7px;list-style:none;font-size:.92rem;}
+#ai-preview summary::-webkit-details-marker{display:none;}
+#ai-preview summary svg{width:16px;height:16px;color:var(--primary);flex-shrink:0;}
+#ai-preview details > div{margin-top:10px;}
+
 /* ── TOAST ── */
 .toast-wrap{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:10px;}
 .toast{

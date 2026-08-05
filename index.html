@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HSK Admin · Quản lý nội dung bài học</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/admin.css?v=6">
+<link rel="stylesheet" href="css/admin.css?v=7">
 </head>
 <body>
 
@@ -106,7 +106,7 @@
       </label>
       <div class="topbar-user" id="login-info" title="Tài khoản đang đăng nhập"></div>
       <button class="topbar-btn" onclick="exportData()" title="Tải file data.js để cập nhật web chính"><span id="ic-dl"></span><span class="btn-label"> Xuất data.js</span></button>
-      <button class="topbar-btn" onclick="openAiModal()" title="Dán bài gốc → AI tự sinh trọn bộ bài học (vocab, hội thoại, ngữ pháp, bài tập...)"><span class="btn-label">✨ AI</span></button>
+      <button class="topbar-btn" onclick="openAiModal()" title="Upload file hoặc dán bài gốc → AI tự sinh trọn bộ bài học (vocab, hội thoại, ngữ pháp, bài tập...)"><span id="ic-ai"></span><span class="btn-label"> AI</span></button>
       <button class="topbar-btn" onclick="handleLogout()" title="Đăng xuất"><span id="ic-logout"></span><span class="btn-label"> Đăng xuất</span></button>
     </header>
 
@@ -795,13 +795,13 @@
 <div class="modal-overlay" id="ai-modal">
   <div class="modal lg" role="dialog" aria-labelledby="ai-modal-title">
     <div class="modal-head">
-      <div class="modal-title" id="ai-modal-title">✨ Sinh bài học bằng AI</div>
-      <button class="modal-x" onclick="closeModal('ai-modal')" aria-label="Đóng">×</button>
+      <div class="modal-title" id="ai-modal-title"><span id="ic-ai-title"></span> Sinh bài học bằng AI</div>
+      <button class="modal-close" onclick="closeModal('ai-modal')" aria-label="Đóng"><span id="ic-ai-x"></span></button>
     </div>
     <div class="modal-body">
       <!-- Bước 1: Input -->
       <div id="ai-input-step">
-        <p class="hint" style="margin-bottom:16px;">Dán bài gốc (text tiếng Trung + dịch) hoặc nhập chủ đề — AI sẽ tự trích xuất vocab, hội thoại, ngữ pháp, bài tập... cho bài đang chọn.</p>
+        <p class="hint" style="margin-bottom:16px;"><b>2 cách nhập bài gốc</b> — AI sẽ tự trích xuất vocab, hội thoại, ngữ pháp, bài tập... (nếu có upload file thì ưu tiên file, không thì dùng text paste).</p>
         <div class="form-grid">
           <div class="form-field">
             <label>Chủ đề <span class="hint">(tùy chọn)</span></label>
@@ -817,20 +817,29 @@
           </div>
         </div>
         <div class="form-field full">
-          <label>Bài gốc <span class="hint">(dán text — AI sẽ trích xuất nội dung)</span></label>
-          <textarea id="ai-source" class="input" rows="10" style="font-family:'Noto Serif SC',serif;resize:vertical;" placeholder="昨天下雪了。今天天气不太好，下雨了。&#10;Hôm qua tuyết rơi rồi. Hôm nay thời tiết không tốt lắm, mưa rồi.&#10;&#10;(Có thể dán cả đoạn dài — AI tự xử lý)"></textarea>
+          <label><span class="lbl-ic" id="ic-ai-upload"></span> Upload file <span class="hint">(.pdf / .docx / .txt — tối đa 10MB)</span></label>
+          <div class="ai-file-row">
+            <input type="file" id="ai-file" class="ai-file-input" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" onchange="onAiFileChange(this)">
+            <button type="button" class="btn btn-sm btn-ghost" id="ai-file-clear" onclick="clearAiFile()" style="display:none;"><span id="ic-ai-clear"></span> Bỏ file</button>
+          </div>
+          <div id="ai-file-info" class="hint ai-file-info"></div>
+        </div>
+        <div class="ai-or">— HOẶC —</div>
+        <div class="form-field full">
+          <label>Dán text bài gốc <span class="hint">(nếu không upload file)</span></label>
+          <textarea id="ai-source" class="input" rows="8" style="font-family:'Noto Serif SC',serif;resize:vertical;" placeholder="昨天下雪了。今天天气不太好，下雨了。&#10;Hôm qua tuyết rơi rồi. Hôm nay thời tiết không tốt lắm, mưa rồi.&#10;&#10;(Có thể dán cả đoạn dài — AI tự xử lý)"></textarea>
         </div>
         <div class="form-actions">
           <button type="button" class="btn" onclick="closeModal('ai-modal')">Hủy</button>
-          <button type="button" class="btn btn-primary" onclick="callAiGenerate()" id="ai-gen-btn">🚀 Sinh bài học</button>
+          <button type="button" class="btn btn-primary" onclick="callAiGenerate()" id="ai-gen-btn"><span id="ic-ai-gen"></span> Sinh bài học</button>
         </div>
       </div>
       <!-- Bước 2: Preview (ẩn lúc đầu) -->
       <div id="ai-preview-step" style="display:none;">
         <div id="ai-preview" style="margin-bottom:16px;"></div>
         <div class="form-actions">
-          <button type="button" class="btn" onclick="resetAiModal()">↩ Quay lại sửa</button>
-          <button type="button" class="btn btn-primary" onclick="saveAiLesson()">💾 Lưu tất cả vào bài đang chọn</button>
+          <button type="button" class="btn" onclick="resetAiModal()"><span id="ic-ai-back"></span> Quay lại sửa</button>
+          <button type="button" class="btn btn-primary" onclick="saveAiLesson()" id="ai-save-btn"><span id="ic-ai-save"></span> Lưu tất cả</button>
         </div>
       </div>
     </div>
@@ -843,8 +852,8 @@
 <!-- ════ SCRIPTS ════ -->
 <script src="js/data.js?v=5"></script>
 <script src="js/config.js?v=3"></script>
-<script src="js/storage.js?v=5"></script>
-<script src="js/admin.js?v=5"></script>
+<script src="js/storage.js?v=6"></script>
+<script src="js/admin.js?v=6"></script>
 <script>
   // Inject icons vào các placeholder span (giữ HTML gọn)
   document.getElementById('ic-dash').innerHTML = I.dashboard;
@@ -859,6 +868,15 @@
   document.getElementById('ic-menu').innerHTML = I.menu;
   document.getElementById('ic-dl').innerHTML = I.download;
   document.getElementById('ic-dl2').innerHTML = I.download;
+  document.getElementById('ic-ai').innerHTML = I.sparkles;
+  // AI modal icons
+  document.getElementById('ic-ai-title').innerHTML = I.sparkles;
+  document.getElementById('ic-ai-x').innerHTML = I.x;
+  document.getElementById('ic-ai-upload').innerHTML = I.upload;
+  document.getElementById('ic-ai-clear').innerHTML = I.x;
+  document.getElementById('ic-ai-gen').innerHTML = I.rocket;
+  document.getElementById('ic-ai-back').innerHTML = I.undo;
+  document.getElementById('ic-ai-save').innerHTML = I.save;
   document.getElementById('ic-ul').innerHTML = I.upload;
   document.getElementById('ic-rs').innerHTML = I.refresh;
   document.getElementById('ic-plus-v').innerHTML = I.plus;
